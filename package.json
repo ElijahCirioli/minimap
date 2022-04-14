@@ -1,0 +1,26 @@
+{
+	"name": "minimap",
+	"version": "1.0.0",
+	"description": "",
+	"main": "server.js",
+	"scripts": {
+		"test": "node server.js",
+		"start": "node server.js"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ElijahCirioli/minimap.git"
+	},
+	"author": "Elijah Cirioli and Charles Hayden",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/ElijahCirioli/minimap/issues"
+	},
+	"homepage": "https://github.com/ElijahCirioli/minimap#readme",
+	"dependencies": {
+		"express": "^4.17.3",
+		"express-handlebars": "^6.0.5",
+		"fs": "^0.0.1-security"
+	},
+	"type": "module"
+}
