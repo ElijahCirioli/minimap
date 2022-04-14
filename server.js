@@ -1,8 +1,9 @@
 import express from "express";
 import { engine } from "express-handlebars";
-import fs from "fs";
 
+const credentials = require("credentials.json");
 const port = process.env.PORT || 3000;
+
 const app = express();
 
 app.engine("handlebars", engine({ defaultLayout: "main" }));
