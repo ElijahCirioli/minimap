@@ -10,7 +10,11 @@ app.set("view engine", "handlebars");
 app.set("views", "./views");
 
 app.use(express.json());
-app.use(express.static("public"));
+app.use(express.static("./static"));
+
+app.get("/", (req, res) => {
+	res.status(200).render("map-page");
+});
 
 app.listen(port, () => {
 	console.log("Server is listening on port " + port);
