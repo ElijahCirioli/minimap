@@ -1,12 +1,70 @@
+:root {
+    --purple: #5055d4;
+    --green: #6aa84f;
+    --white: #ededed;
+    --black: #0f0f0f;
+}
 body {
-    background-color: black;
-    color: white;
-    display: grid;
+    background-color: var(--white);
+    color: var(--black);
+    font-family: "Nunito", sans-serif;
+    padding: 0;
+    margin: 0;
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+}
+header {
+    background-color: var(--purple);
+    height: 30px;
+    width: calc(100% - 10px);
+    padding: 10px 20px;
+}
+#logo {
     display: flex;
-    justify-content: center;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
     align-items: center;
+    cursor: pointer;
+}
+.logo-text { 
+    color: var(--white);
+    font-family: "Fredoka One", cursive;
+    font-size: 32px;
+    height: 30px;
+    line-height: 28px;
+    margin: 0;
+}
+.green-text {
+    color: var(--green);
+}
+footer {
+    background-color: var(--purple);
+    height: 20px;
+    width: 100%;
+    padding: 10px 0;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+}
+#credit-text {
+    color: var(--white);
+    text-align: center;
+    margin: 0 auto;
+    height: 20px;
+    line-height: 20px;
+    font-size: 14px;
+}
+#credit-text a {
+    color: var(--white);
+    text-decoration: none;
+}
+#content-wrap {
+    width: 100%;
+    height: calc(100% - 90px);
 }
 #map {
-    width: 500px;
-    height: 500px;
+    width: 100%;
+    height: 100%;
 }
