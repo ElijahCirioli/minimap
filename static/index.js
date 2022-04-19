@@ -57,3 +57,11 @@ function getUserPosition() {
 }
 
 $("#recenter-button").click(getUserPosition);
+
+$("#location-search-form").on("submit", (e) => {
+	e.preventDefault();
+});
+
+$("#clear-location-search-button").click((e) => {
+	$("#location-search").val("");
+});

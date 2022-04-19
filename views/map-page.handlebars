@@ -1,7 +1,14 @@
 <div id="map"></div>
 <div id="on-map-controls">
-    <button class="map-control" id="recenter-button"><i class="fa fa-solid fa-location-arrow"></i></button>
-    <form id="location-search-form"><input type="text" class="map-control" id="location-search" placeholder="Search locations" autocomplete="off" autocapitalize="off" spellcheck="false"></form>
+    <button class="map-control" id="recenter-button">
+        <i class="fa fa-solid fa-location-arrow"></i>
+    </button>
+    <form id="location-search-form">
+        <input type="text" class="map-control" id="location-search" placeholder="Search locations" autocomplete="off" autocapitalize="off" spellcheck="false">
+        <button id="clear-location-search-button">
+            <i class="fa fa-solid fa-xmark"></i>
+        </button>
+    </form>
 </div>
 <script src="index.js" charset="utf8"></script>
 <script
