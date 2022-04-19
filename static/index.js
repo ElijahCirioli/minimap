@@ -29,11 +29,23 @@ function getUserPosition() {
 				lat: position.coords.latitude,
 				lng: position.coords.longitude,
 			};
+
+			// recenter map
 			map.setCenter(posObject);
 			map.setZoom(17);
 
+			// update marker
 			if (!userMarker) {
-				userMarker = new google.maps.Marker({ position: posObject, map });
+				// create marker
+				userMarker = new google.maps.Marker({
+					position: posObject,
+					map: map,
+					icon: {
+						url: "icons/person-outline.png",
+						scaledSize: new google.maps.Size(32, 47),
+						anchor: new google.maps.Point(16, 40),
+					},
+				});
 			} else {
 				userMarker.setPosition(posObject);
 			}
@@ -43,3 +55,5 @@ function getUserPosition() {
 		}
 	);
 }
+
+$("#recenter-button").click(getUserPosition);

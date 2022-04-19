@@ -1,4 +1,8 @@
 <div id="map"></div>
+<div id="on-map-controls">
+    <button class="map-control" id="recenter-button"><i class="fa fa-solid fa-location-arrow"></i></button>
+    <form id="location-search-form"><input type="text" class="map-control" id="location-search" placeholder="Search locations" autocomplete="off" autocapitalize="off" spellcheck="false"></form>
+</div>
 <script src="index.js" charset="utf8"></script>
 <script
     src="https://maps.googleapis.com/maps/api/js?key={{apiKey}}&callback=createMap&v=weekly"

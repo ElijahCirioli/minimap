@@ -2,6 +2,7 @@
     --purple: #5055d4;
     --green: #6aa84f;
     --white: #ededed;
+    --light-gray: #dedede;
     --black: #0f0f0f;
 }
 body {
@@ -18,7 +19,7 @@ header {
     background-color: var(--purple);
     height: 30px;
     width: calc(100% - 10px);
-    padding: 10px 20px;
+    padding: 10px 22px;
 }
 #logo {
     display: flex;
@@ -27,6 +28,12 @@ header {
     justify-content: flex-start;
     align-items: center;
     cursor: pointer;
+    height: 30px;
+}
+#logo-icon {
+    height: 34px;
+    width: auto;
+    margin-right: 6px;
 }
 .logo-text { 
     color: var(--white);
@@ -47,6 +54,7 @@ footer {
     position: absolute;
     bottom: 0;
     left: 0;
+    z-index: 10;
 }
 #credit-text {
     color: var(--white);
@@ -63,8 +71,58 @@ footer {
 #content-wrap {
     width: 100%;
     height: calc(100% - 90px);
+    position: relative;
 }
 #map {
     width: 100%;
     height: 100%;
+}
+#on-map-controls {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    z-index: 10;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 15px;
+}
+.map-control {
+    background-color: var(--light-gray);
+    height: 35px;
+    border-radius: 10px;
+    transition: background-color 0.3s;
+    box-shadow: -1px 2px 4px 2px rgba(0, 0, 0, 0.3);
+}
+.map-control:hover {
+    background-color: var(--white);
+}
+#recenter-button {
+    color: var(--green);
+    border: none;
+    cursor: pointer;
+    width: 35px;
+    display: grid;
+    place-items: center;
+    transition: transform 0.2s ease-in-out, background-color 0.3s;
+}
+#recenter-button:hover {
+    transform: scale(1.05);
+}
+#recenter-button:active {
+    transform: scale(0.97);
+}
+#location-search {
+    width: 150px;
+    font-family: "Nunito", sans-serif;
+    outline: none;
+    border: none;
+    margin: 0;
+    padding: 0 5px 0 10px;
+}
+#location-search:focus {
+    background-color: var(--white);
+    outline: 2px solid var(--green);
 }
