@@ -1,11 +1,13 @@
-let map, userMarker;
+let map, userMarker, locationSearch;
 
 function createMap() {
 	// create google maps object
 	map = new google.maps.Map(document.getElementById("map"), {
 		center: { lat: 44.565288, lng: -123.278921 },
 		zoom: 17,
-		zoomControl: true,
+		zoomControl: {
+			position: google.maps.ControlPosition.LEFT_BOTTOM,
+		},
 		mapTypeControl: false,
 		scaleControl: true,
 		streetViewControl: false,
@@ -13,8 +15,41 @@ function createMap() {
 		fullscreenControl: false,
 	});
 
+	setupLocationSearch();
+
 	// try to get the current user position
 	getUserPosition();
+}
+
+function setupLocationSearch() {
+	// create location search object
+	const options = {
+		componentRestrictions: { country: "us" },
+		fields: ["name", "geometry"],
+		strictBounds: false,
+		types: ["establishment"],
+	};
+	locationSearch = new google.maps.places.Autocomplete($("#location-search")[0], options);
+	locationSearch.bindTo("bounds", map);
+
+	$("#location-search-form").on("submit", (e) => {
+		e.preventDefault();
+	});
+
+	locationSearch.addListener("place_changed", () => {
+		const place = locationSearch.getPlace();
+
+		if (place.geometry && place.geometry.location) {
+			map.setCenter(place.geometry.location);
+			map.setZoom(17);
+			$("#location-search").val("");
+		} else if (place.geometry && place.geometry.viewport) {
+			map.fitBounds(place.geometry.viewport);
+			$("#location-search").val("");
+		} else {
+			alert("No location data available for this place");
+		}
+	});
 }
 
 function getUserPosition() {
@@ -57,10 +92,6 @@ function getUserPosition() {
 }
 
 $("#recenter-button").click(getUserPosition);
-
-$("#location-search-form").on("submit", (e) => {
-	e.preventDefault();
-});
 
 $("#clear-location-search-button").click((e) => {
 	$("#location-search").val("");
