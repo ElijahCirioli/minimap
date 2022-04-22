@@ -15,6 +15,12 @@ function createMap() {
 		fullscreenControl: false,
 	});
 
+	map.addListener("click", (e) => {
+		const pos = e.latLng.toJSON();
+		new BikeRack(pos, map);
+	});
+
+	// setup location search API
 	setupLocationSearch();
 
 	// try to get the current user position
@@ -32,13 +38,16 @@ function setupLocationSearch() {
 	locationSearch = new google.maps.places.Autocomplete($("#location-search")[0], options);
 	locationSearch.bindTo("bounds", map);
 
+	// make sure the form won't cause the page to reload
 	$("#location-search-form").on("submit", (e) => {
 		e.preventDefault();
 	});
 
+	// trigger when a place is selected
 	locationSearch.addListener("place_changed", () => {
 		const place = locationSearch.getPlace();
 
+		// try to move the camera there
 		if (place.geometry && place.geometry.location) {
 			map.setCenter(place.geometry.location);
 			map.setZoom(17);
