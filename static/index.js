@@ -6,11 +6,12 @@ function createMap() {
 	map = new google.maps.Map(document.getElementById("map"), {
 		center: { lat: 44.565288, lng: -123.278921 },
 		zoom: 17,
-		zoomControl: {
+		zoomControl: true,
+		zoomControlOptions: {
 			position: google.maps.ControlPosition.LEFT_BOTTOM,
 		},
 		mapTypeControl: false,
-		scaleControl: true,
+		scaleControl: false,
 		streetViewControl: false,
 		rotateControl: true,
 		fullscreenControl: false,
