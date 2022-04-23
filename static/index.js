@@ -1,4 +1,5 @@
 let map, userMarker, locationSearch;
+let positionWatchId;
 
 function createMap() {
 	// create google maps object
@@ -17,14 +18,20 @@ function createMap() {
 
 	map.addListener("click", (e) => {
 		const pos = e.latLng.toJSON();
-		new BikeRack(pos, map);
+
+		if (Math.random() < 0.5) {
+			new Restroom(pos, map);
+		} else {
+			new BikeRack(pos, map);
+		}
 	});
 
 	// setup location search API
 	setupLocationSearch();
 
 	// try to get the current user position
-	getUserPosition();
+	startLocationTracking();
+	centerOnUserLocation();
 }
 
 function setupLocationSearch() {
@@ -61,38 +68,41 @@ function setupLocationSearch() {
 	});
 }
 
-function getUserPosition() {
+function updateUserMarker(pos) {
+	if (userMarker) {
+		userMarker.setPosition(pos);
+	} else {
+		// create marker
+		userMarker = new google.maps.Marker({
+			position: pos,
+			map: map,
+			icon: {
+				url: "icons/person-outline.png",
+				scaledSize: new google.maps.Size(32, 47),
+				anchor: new google.maps.Point(16, 40),
+			},
+		});
+	}
+}
+
+function startLocationTracking() {
 	// make sure geolocation is supported
 	if (!navigator.geolocation) {
 		return;
 	}
 
-	navigator.geolocation.getCurrentPosition(
+	if (positionWatchId) {
+		navigator.geolocation.clearWatch(positionWatchId);
+	}
+
+	positionWatchId = navigator.geolocation.watchPosition(
 		(position) => {
-			const posObject = {
+			const pos = {
 				lat: position.coords.latitude,
 				lng: position.coords.longitude,
 			};
 
-			// recenter map
-			map.setCenter(posObject);
-			map.setZoom(17);
-
-			// update marker
-			if (!userMarker) {
-				// create marker
-				userMarker = new google.maps.Marker({
-					position: posObject,
-					map: map,
-					icon: {
-						url: "icons/person-outline.png",
-						scaledSize: new google.maps.Size(32, 47),
-						anchor: new google.maps.Point(16, 40),
-					},
-				});
-			} else {
-				userMarker.setPosition(posObject);
-			}
+			updateUserMarker(pos);
 		},
 		(e) => {
 			console.log("unable to get geolocation data: ", e);
@@ -100,7 +110,33 @@ function getUserPosition() {
 	);
 }
 
-$("#recenter-button").click(getUserPosition);
+function centerOnUserLocation() {
+	// make sure geolocation is supported
+	if (!navigator.geolocation) {
+		return;
+	}
+
+	navigator.geolocation.getCurrentPosition(
+		(position) => {
+			const pos = {
+				lat: position.coords.latitude,
+				lng: position.coords.longitude,
+			};
+
+			// recenter map
+			map.setCenter(pos);
+			map.setZoom(17);
+
+			// update marker
+			updateUserMarker(pos);
+		},
+		(e) => {
+			console.log("unable to get geolocation data: ", e);
+		}
+	);
+}
+
+$("#recenter-button").click(centerOnUserLocation);
 
 $("#clear-location-search-button").click((e) => {
 	$("#location-search").val("");

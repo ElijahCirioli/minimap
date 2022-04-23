@@ -27,3 +27,11 @@ class BikeRack extends Marker {
 		this.addToMap(map, "icons/bike-rack.png");
 	}
 }
+
+class Restroom extends Marker {
+	constructor(pos, map) {
+		super(pos);
+		this.type = "Restroom";
+		this.addToMap(map, "icons/restroom.png");
+	}
+}
