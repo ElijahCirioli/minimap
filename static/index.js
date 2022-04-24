@@ -21,16 +21,18 @@ function createMap() {
 		const pos = e.latLng.toJSON();
 
 		const rand = Math.random();
-		if (rand > 0.8) {
+		if (rand > 5 / 6) {
 			new Restroom(pos, map);
-		} else if (rand > 0.6) {
+		} else if (rand > 2 / 3) {
 			new BikeRack(pos, map);
-		} else if (rand > 0.4) {
+		} else if (rand > 1 / 2) {
 			new PostalDropBox(pos, map);
-		} else if (rand > 0.2) {
+		} else if (rand > 1 / 3) {
 			new DrinkingFountain(pos, map);
-		} else {
+		} else if (rand > 1 / 6) {
 			new VendingMachine(pos, map);
+		} else {
+			new InterestPoint(pos, map);
 		}
 	});
 
@@ -151,4 +153,24 @@ $("#recenter-button").click(centerOnUserLocation);
 
 $("#clear-location-search-button").click((e) => {
 	$("#location-search").val("");
+});
+
+$("#create-marker-button").click((e) => {
+	if ($("#create-marker-button").hasClass("square-button")) {
+		return;
+	}
+
+	$("#create-marker-button").removeClass("round-button");
+	$("#create-marker-button").addClass("square-button");
+
+	$("#plus-button").hide();
+	$(".marker-type-button").show();
+});
+
+$("#create-marker-button").on("focusout", (e) => {
+	$("#create-marker-button").removeClass("square-button");
+	$("#create-marker-button").addClass("round-button");
+
+	$("#plus-button").show();
+	$(".marker-type-button").hide();
 });

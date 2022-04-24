@@ -59,3 +59,11 @@ class VendingMachine extends Marker {
 		this.addToMap(map, "icons/vending-machine.png");
 	}
 }
+
+class InterestPoint extends Marker {
+	constructor(pos, map) {
+		super(pos);
+		this.type = "InterestPoint";
+		this.addToMap(map, "icons/interest-point.png");
+	}
+}

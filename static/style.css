@@ -1,5 +1,6 @@
 :root {
     --purple: #5055d4;
+    --light-purple: #5a5fe6;
     --green: #6aa84f;
     --red: #d41c1c;
     --white: #ededed;
@@ -145,4 +146,68 @@ footer {
 }
 #clear-location-search-button:hover {
     color: var(--red);
+}
+#create-marker-button {
+    background-color: var(--purple);
+    color: var(--white);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    z-index: 10;
+    bottom: 20px;
+    right: 15px;
+    cursor: pointer;
+    box-shadow: -2px 2px 4px 2px rgba(0, 0, 0, 0.3);
+    transition: width 0.5s, height 0.5s, border-radius 0.5s;
+}
+#plus-button {
+    font-size: 60px;
+    line-height: 60px;
+    height: 60px;
+    font-weight: bold;
+    text-align: center;
+    margin: 0 0 3px 0;
+}
+.round-button {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    transition: background-color 0.3s;
+}
+.round-button:hover {
+    background-color: var(--light-purple);
+}
+.square-button {
+    width: 185px;
+    height: fit-content;
+    border-radius: 15px;
+    overflow: hidden;
+}
+.marker-type-button {
+    width: calc(100% - 10px);
+    height: 28px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    flex-wrap: nowrap;
+    cursor: pointer;
+    padding: 4px 2px 4px 8px;
+    transition: background-color 0.3s;
+}
+.marker-type-button:hover {
+    background-color: var(--light-purple);
+}
+.marker-type-button img {
+    height: 28px;
+    width: 28px;
+}
+.marker-type-button p {
+    font-size: 16px;
+    text-align: left;
+    margin: 0 0 0 5px;
+    text-overflow: hidden;
+    white-space: nowrap;
 }
