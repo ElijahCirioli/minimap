@@ -35,3 +35,27 @@ class Restroom extends Marker {
 		this.addToMap(map, "icons/restroom.png");
 	}
 }
+
+class PostalDropBox extends Marker {
+	constructor(pos, map) {
+		super(pos);
+		this.type = "PostalDropBox";
+		this.addToMap(map, "icons/postal-drop-box.png");
+	}
+}
+
+class DrinkingFountain extends Marker {
+	constructor(pos, map) {
+		super(pos);
+		this.type = "DrinkingFountain";
+		this.addToMap(map, "icons/drinking-fountain.png");
+	}
+}
+
+class VendingMachine extends Marker {
+	constructor(pos, map) {
+		super(pos);
+		this.type = "VendingMachine";
+		this.addToMap(map, "icons/vending-machine.png");
+	}
+}

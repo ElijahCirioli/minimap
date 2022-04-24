@@ -20,10 +20,17 @@ function createMap() {
 	map.addListener("click", (e) => {
 		const pos = e.latLng.toJSON();
 
-		if (Math.random() < 0.5) {
+		const rand = Math.random();
+		if (rand > 0.8) {
 			new Restroom(pos, map);
-		} else {
+		} else if (rand > 0.6) {
 			new BikeRack(pos, map);
+		} else if (rand > 0.4) {
+			new PostalDropBox(pos, map);
+		} else if (rand > 0.2) {
+			new DrinkingFountain(pos, map);
+		} else {
+			new VendingMachine(pos, map);
 		}
 	});
 
@@ -31,7 +38,6 @@ function createMap() {
 	setupLocationSearch();
 
 	// try to get the current user position
-	startLocationTracking();
 	centerOnUserLocation();
 }
 
@@ -130,6 +136,10 @@ function centerOnUserLocation() {
 
 			// update marker
 			updateUserMarker(pos);
+
+			if (!positionWatchId) {
+				startLocationTracking();
+			}
 		},
 		(e) => {
 			console.log("unable to get geolocation data: ", e);
