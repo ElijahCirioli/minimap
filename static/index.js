@@ -1,5 +1,6 @@
 let map, userMarker, locationSearch;
 let positionWatchId;
+let userId;
 
 const iconPaths = {
 	BikeRack: "icons/bike-rack.png",
@@ -139,6 +140,30 @@ function createMarker(pos, type) {
 	});
 }
 
+function populateMarkerInfo(data) {
+	$("#marker-info-title").text(data.type);
+	const coordString = data.pos.lat.toFixed(7) + ", " + data.pos.lng.toFixed(7);
+	$("#marker-info-coords").text(coordString);
+
+	$("#marker-info-attributes-wrap").empty();
+	for (const attr of data.attributes) {
+		let icon = "<i class='fa fa-solid fa-circle-question'></i>";
+		let attrClass = "marker-attribute-false";
+		if (attr.value) {
+			icon = "<i class='fa fa-solid fa-circle-check'></i>";
+			attrClass = "marker-attribute-true";
+		} else if (attr.value === false) {
+			icon = "<i class='fa fa-solid fa-circle-xmark'></i>";
+		}
+
+		$("#marker-info-attributes-wrap").append(
+			`<div class="marker-info-attribute">${icon}<p class="${attrClass}">${attr.name}</p></div>`
+		);
+	}
+
+	$("#marker-info-wrap").show();
+}
+
 $("#recenter-button").click(startLocationTracking);
 
 $("#clear-location-search-button").click((e) => {
@@ -163,4 +188,33 @@ $("#create-marker-button").on("focusout", (e) => {
 
 	$("#plus-button").show();
 	$(".marker-type-button").hide();
+});
+
+$("#hide-info-button").click((e) => {
+	$("#marker-info-wrap").hide();
+});
+
+$(document).ready(() => {
+	userId = window.localStorage.getItem("minimap-user-id");
+
+	if (!userId) {
+		const charSet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+		userId = "";
+		for (let i = 0; i < 20; i++) {
+			userId += charSet.charAt(Math.floor(Math.random() * charSet.length));
+		}
+		window.localStorage.setItem("minimap-user-id", userId);
+	}
+
+	populateMarkerInfo({
+		type: "Restroom",
+		pos: { lat: 44.5642710670756, lng: -123.28703130317993 },
+		attributes: [
+			{ name: "Single user", value: true },
+			{ name: "Gender inclusive", value: true },
+			{ name: "Baby-changing station", value: false },
+			{ name: "Sanitary products", value: undefined },
+			{ name: "Free to use", value: false },
+		],
+	});
 });
