@@ -1,6 +1,15 @@
 let map, userMarker, locationSearch;
 let positionWatchId;
 
+const iconPaths = {
+	BikeRack: "icons/bike-rack.png",
+	Restroom: "icons/restroom.png",
+	PostalDropBox: "icons/postal-drop-box.png",
+	DrinkingFountain: "icons/drinking-fountain.png",
+	VendingMachine: "icons/vending-machine.png",
+	InterestPoint: "icons/interest-point.png",
+};
+
 function createMap() {
 	// create google maps object
 	map = new google.maps.Map(document.getElementById("map"), {
@@ -19,21 +28,10 @@ function createMap() {
 
 	map.addListener("click", (e) => {
 		const pos = e.latLng.toJSON();
+		const types = Object.keys(iconPaths);
+		const markerType = types[Math.floor(Math.random() * types.length)];
 
-		const rand = Math.random();
-		if (rand > 5 / 6) {
-			new Restroom(pos, map);
-		} else if (rand > 2 / 3) {
-			new BikeRack(pos, map);
-		} else if (rand > 1 / 2) {
-			new PostalDropBox(pos, map);
-		} else if (rand > 1 / 3) {
-			new DrinkingFountain(pos, map);
-		} else if (rand > 1 / 6) {
-			new VendingMachine(pos, map);
-		} else {
-			new InterestPoint(pos, map);
-		}
+		createMarker(pos, markerType);
 	});
 
 	// setup location search API
@@ -147,6 +145,20 @@ function centerOnUserLocation() {
 			console.log("unable to get geolocation data: ", e);
 		}
 	);
+}
+
+function createMarker(pos, type) {
+	const path = iconPaths[type];
+	new google.maps.Marker({
+		position: pos,
+		map: map,
+		icon: {
+			url: path,
+			scaledSize: new google.maps.Size(32, 32),
+			anchor: new google.maps.Point(16, 16),
+		},
+		animation: google.maps.Animation.DROP,
+	});
 }
 
 $("#recenter-button").click(centerOnUserLocation);
