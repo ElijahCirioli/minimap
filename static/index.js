@@ -180,6 +180,7 @@ $("#create-marker-button").click((e) => {
 
 	$("#plus-button").hide();
 	$(".marker-type-button").show();
+	$(".marker-type-button").css("opacity", 1);
 });
 
 $("#create-marker-button").on("focusout", (e) => {
@@ -187,6 +188,7 @@ $("#create-marker-button").on("focusout", (e) => {
 	$("#create-marker-button").addClass("round-button");
 
 	$("#plus-button").show();
+	$(".marker-type-button").css("opacity", 0);
 	$(".marker-type-button").hide();
 });
 
