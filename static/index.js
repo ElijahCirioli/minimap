@@ -38,7 +38,7 @@ function createMap() {
 	setupLocationSearch();
 
 	// try to get the current user position
-	centerOnUserLocation();
+	startLocationTracking();
 }
 
 function setupLocationSearch() {
@@ -102,6 +102,8 @@ function startLocationTracking() {
 		navigator.geolocation.clearWatch(positionWatchId);
 	}
 
+	let hasCentered = false;
+
 	positionWatchId = navigator.geolocation.watchPosition(
 		(position) => {
 			const pos = {
@@ -110,35 +112,11 @@ function startLocationTracking() {
 			};
 
 			updateUserMarker(pos);
-		},
-		(e) => {
-			console.log("unable to get geolocation data: ", e);
-		}
-	);
-}
 
-function centerOnUserLocation() {
-	// make sure geolocation is supported
-	if (!navigator.geolocation) {
-		return;
-	}
-
-	navigator.geolocation.getCurrentPosition(
-		(position) => {
-			const pos = {
-				lat: position.coords.latitude,
-				lng: position.coords.longitude,
-			};
-
-			// recenter map
-			map.setCenter(pos);
-			map.setZoom(17);
-
-			// update marker
-			updateUserMarker(pos);
-
-			if (!positionWatchId) {
-				startLocationTracking();
+			if (!hasCentered) {
+				map.setCenter(pos);
+				map.setZoom(17);
+				hasCentered = true;
 			}
 		},
 		(e) => {
@@ -161,7 +139,7 @@ function createMarker(pos, type) {
 	});
 }
 
-$("#recenter-button").click(centerOnUserLocation);
+$("#recenter-button").click(startLocationTracking);
 
 $("#clear-location-search-button").click((e) => {
 	$("#location-search").val("");
