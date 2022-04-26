@@ -11,6 +11,30 @@ const iconPaths = {
 	InterestPoint: "icons/interest-point.png",
 };
 
+const markerAttributes = {
+	BikeRack: [{ name: "Covered", type: "Bool" }],
+	Restroom: [
+		{ name: "Single user", type: "Bool" },
+		{ name: "Gender inclusive", type: "Bool" },
+		{ name: "Baby-changing station", type: "Bool" },
+		{ name: "Sanitary products", type: "Bool" },
+		{ name: "Free to use", type: "Bool" },
+	],
+	PostalDropBox: [{ name: "Collection time", type: "Int" }],
+	DrinkingFountain: [{ name: "Water bottle filler", type: "Bool" }],
+	VendingMachine: [
+		{ name: "Drinks", type: "Bool" },
+		{ name: "Candy", type: "Bool" },
+		{ name: "Food", type: "Bool" },
+		{ name: "Accepts card", type: "Bool" },
+		{ name: "Accepts cash", type: "Bool" },
+	],
+	InterestPoint: [
+		{ name: "Name", type: "String" },
+		{ name: "Description", type: "String" },
+	],
+};
+
 function createMap() {
 	// create google maps object
 	map = new google.maps.Map(document.getElementById("map"), {
@@ -25,14 +49,6 @@ function createMap() {
 		streetViewControl: false,
 		rotateControl: true,
 		fullscreenControl: false,
-	});
-
-	map.addListener("click", (e) => {
-		const pos = e.latLng.toJSON();
-		const types = Object.keys(iconPaths);
-		const markerType = types[Math.floor(Math.random() * types.length)];
-
-		createMarker(pos, markerType);
 	});
 
 	// setup location search API
@@ -126,9 +142,9 @@ function startLocationTracking() {
 	);
 }
 
-function createMarker(pos, type) {
+function addMarker(pos, type) {
 	const path = iconPaths[type];
-	new google.maps.Marker({
+	return new google.maps.Marker({
 		position: pos,
 		map: map,
 		icon: {
@@ -140,7 +156,7 @@ function createMarker(pos, type) {
 	});
 }
 
-function populateMarkerInfo(data) {
+function populateMarkerInfo(data, marker) {
 	$("#marker-info-title").text(data.type);
 	const coordString = data.pos.lat.toFixed(7) + ", " + data.pos.lng.toFixed(7);
 	$("#marker-info-coords").text(coordString);
@@ -161,8 +177,78 @@ function populateMarkerInfo(data) {
 		);
 	}
 
-	$("#marker-info-wrap").show();
+	$("#hide-info-button").off("click");
+	$("#hide-info-button").click((e) => {
+		marker.setMap(null);
+		$("#marker-info-wrap").css("left", "-340px");
+		$("#create-marker-button").show();
+	});
+
+	$("#marker-info-wrap").css("left", 0);
 }
+
+function createNewMarker(type, name) {
+	const userPos = userMarker.getPosition();
+	const bounds = map.getBounds();
+	let markerPos;
+	let marker;
+
+	if (bounds.contains(userPos)) {
+		// user marker is on screen
+		markerPos = userPos;
+	} else {
+		// user marker is off screen
+		markerPos = bounds.getCenter();
+	}
+
+	marker = addMarker(markerPos, type);
+	marker.setDraggable(true);
+	const icon = marker.getIcon();
+	const scaledIcon = {
+		url: icon.url,
+		scaledSize: new google.maps.Size(38, 38),
+		anchor: new google.maps.Point(19, 19),
+	};
+	marker.setIcon(scaledIcon);
+
+	const markerInfo = {
+		type: name,
+		pos: markerPos.toJSON(),
+		attributes: [],
+	};
+
+	for (const attr of markerAttributes[type]) {
+		markerInfo.attributes.push({ name: attr.name, value: undefined, type: attr.type });
+	}
+
+	populateMarkerInfo(markerInfo, marker);
+
+	$("#create-marker-button").hide();
+}
+
+$("#bike-rack-button").click((e) => {
+	createNewMarker("BikeRack", "Bike Rack");
+});
+
+$("#restroom-button").click((e) => {
+	createNewMarker("Restroom", "Restroom");
+});
+
+$("#vending-machine-button").click((e) => {
+	createNewMarker("VendingMachine", "Vending Machine");
+});
+
+$("#postal-drop-box-button").click((e) => {
+	createNewMarker("PostalDropBox", "Postal Drop Box");
+});
+
+$("#drinking-fountain-button").click((e) => {
+	createNewMarker("DrinkingFountain", "Drinking Fountain");
+});
+
+$("#interest-point-button").click((e) => {
+	createNewMarker("InterestPoint", "Point of Interest");
+});
 
 $("#recenter-button").click(startLocationTracking);
 
@@ -192,10 +278,6 @@ $("#create-marker-button").on("focusout", (e) => {
 	$(".marker-type-button").hide();
 });
 
-$("#hide-info-button").click((e) => {
-	$("#marker-info-wrap").hide();
-});
-
 $(document).ready(() => {
 	userId = window.localStorage.getItem("minimap-user-id");
 
@@ -207,16 +289,4 @@ $(document).ready(() => {
 		}
 		window.localStorage.setItem("minimap-user-id", userId);
 	}
-
-	populateMarkerInfo({
-		type: "Restroom",
-		pos: { lat: 44.5642710670756, lng: -123.28703130317993 },
-		attributes: [
-			{ name: "Single user", value: true },
-			{ name: "Gender inclusive", value: true },
-			{ name: "Baby-changing station", value: false },
-			{ name: "Sanitary products", value: undefined },
-			{ name: "Free to use", value: false },
-		],
-	});
 });
