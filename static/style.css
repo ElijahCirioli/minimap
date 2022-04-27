@@ -324,3 +324,12 @@ footer {
 .marker-info-button:hover {
     text-decoration: none;
 }
+select {
+    font-family: "Nunito", sans-serif;
+    color: var(--black);
+    border-radius: 5px;
+    background-color: var(--white);
+}
+select:focus {
+    outline: none;
+}

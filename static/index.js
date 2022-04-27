@@ -1,6 +1,7 @@
 let map, userMarker, locationSearch;
 let positionWatchId;
 let userId;
+let markers = [];
 
 const iconPaths = {
 	BikeRack: "icons/bike-rack.png",
@@ -177,19 +178,38 @@ function populateMarkerInfo(data, marker, exists) {
 				${icon}
 				<p class="${attrClass}">${attr.name}</p>
 				<select name="${attr.name}" hidden>
-					<option value="unknown">Unknown</option>
-					<option value="yes">Yes</option>
-					<option value="no">No</option>
+					<option value="unknown" ${attr.value === undefined ? "selected" : ""}>Unknown</option>
+					<option value="yes" ${attr.value ? "selected" : ""}>Yes</option>
+					<option value="no" ${attr.value === false ? "selected" : ""}>No</option>
 				</select>
 			</div>`
 		);
 	}
 
+	$("select").on("change", (e) => {
+		const val = e.target.value;
+		let newClass = "marker-attribute-false";
+		let newIcon = "<i class='fa fa-solid fa-circle-question'></i>";
+		if (val === "yes") {
+			newClass = "marker-attribute-true";
+			newIcon = "<i class='fa fa-solid fa-circle-check'></i>";
+		} else if (val === "no") {
+			newIcon = "<i class='fa fa-solid fa-circle-xmark'></i>";
+		}
+
+		const row = $(e.target).parent();
+		row.children("i").remove();
+		row.prepend(newIcon);
+		row.children("p").removeClass("marker-attribute-false");
+		row.children("p").removeClass("marker-attribute-true");
+		row.children("p").addClass(newClass);
+	});
+
 	const icon = marker.getIcon();
 	const scaledIcon = {
 		url: icon.url,
-		scaledSize: new google.maps.Size(38, 38),
-		anchor: new google.maps.Point(19, 19),
+		scaledSize: new google.maps.Size(40, 40),
+		anchor: new google.maps.Point(20, 20),
 	};
 	marker.setIcon(scaledIcon);
 
@@ -205,9 +225,33 @@ function populateMarkerInfo(data, marker, exists) {
 		$("#create-marker-button").show();
 	});
 
+	$("#marker-edit-confirm-button").off("click");
+	$("#marker-edit-confirm-button").click((e) => {
+		if (!exists) {
+			markers.push(marker);
+		}
+		marker.setIcon(icon);
+		marker.setDraggable(false);
+		populateMarkerInfo(data, marker, true);
+	});
+
+	$("#marker-edit-cancel-button").off("click");
+	$("#marker-edit-cancel-button").click((e) => {
+		if (!exists) {
+			$("#hide-info-button").click();
+		} else {
+			marker.setIcon(icon);
+			populateMarkerInfo(data, marker, exists);
+		}
+	});
+
 	$("#marker-info-wrap").css("left", 0);
 	$("#marker-info-buttons-wrap").show();
 	$("#marker-edit-buttons-wrap").hide();
+
+	if (!exists) {
+		$("#marker-edit-button").click();
+	}
 }
 
 function createNewMarker(type, name) {
