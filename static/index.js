@@ -143,9 +143,9 @@ function startLocationTracking() {
 	);
 }
 
-function addMarker(pos, type) {
+function addMarker(pos, type, id) {
 	const path = iconPaths[type];
-	return new google.maps.Marker({
+	const marker = new google.maps.Marker({
 		position: pos,
 		map: map,
 		icon: {
@@ -155,9 +155,23 @@ function addMarker(pos, type) {
 		},
 		animation: google.maps.Animation.DROP,
 	});
+
+	google.maps.event.addListener(marker, "click", (e) => {
+		$("#hide-info-button").click();
+		populateMarkerInfo(id, marker, true);
+	});
+	markers.push({
+		id: id,
+		marker: marker,
+		type: type,
+	});
+
+	return marker;
 }
 
-function populateMarkerInfo(data, marker, exists) {
+function populateMarkerInfo(id, marker, exists, presetData) {
+	const data = presetData || getDatabase(id);
+
 	$("#marker-info-title").text(data.type);
 	const coordString = data.pos.lat.toFixed(7) + ", " + data.pos.lng.toFixed(7);
 	$("#marker-info-coords").text(coordString);
@@ -227,12 +241,23 @@ function populateMarkerInfo(data, marker, exists) {
 
 	$("#marker-edit-confirm-button").off("click");
 	$("#marker-edit-confirm-button").click((e) => {
-		if (!exists) {
-			markers.push(marker);
-		}
 		marker.setIcon(icon);
 		marker.setDraggable(false);
-		populateMarkerInfo(data, marker, true);
+		const attributes = [];
+		$("select").each(function () {
+			const value = $(this).val() === "yes" ? true : $(this).val() === "no" ? false : undefined;
+			attributes.push({ name: $(this).attr("name"), value: value, type: "Bool" });
+		});
+
+		if (exists) {
+			// update database
+			updateDatabase(id, attributes);
+		} else {
+			// add to database
+			postDatabase(id, marker.getPosition().toJSON(), data.type, attributes);
+		}
+
+		populateMarkerInfo(id, marker, true);
 	});
 
 	$("#marker-edit-cancel-button").off("click");
@@ -241,7 +266,7 @@ function populateMarkerInfo(data, marker, exists) {
 			$("#hide-info-button").click();
 		} else {
 			marker.setIcon(icon);
-			populateMarkerInfo(data, marker, exists);
+			populateMarkerInfo(id, marker, exists);
 		}
 	});
 
@@ -268,7 +293,7 @@ function createNewMarker(type, name) {
 		markerPos = bounds.getCenter();
 	}
 
-	marker = addMarker(markerPos, type);
+	marker = addMarker(markerPos, type, markers.length);
 	marker.setDraggable(true);
 	google.maps.event.addListener(marker, "dragend", (e) => {
 		const coordString = e.latLng.lat().toFixed(7) + ", " + e.latLng.lng().toFixed(7);
@@ -284,9 +309,8 @@ function createNewMarker(type, name) {
 		markerInfo.attributes.push({ name: attr.name, value: undefined, type: attr.type });
 	}
 
-	populateMarkerInfo(markerInfo, marker, false);
-
-	$("#create-marker-button").hide();
+	$("#hide-info-button").click();
+	populateMarkerInfo(markers.length - 1, marker, false, markerInfo);
 }
 
 $("#marker-edit-button").click((e) => {
@@ -362,4 +386,45 @@ $(document).ready(() => {
 		}
 		window.localStorage.setItem("minimap-user-id", userId);
 	}
+
+	preloadDatabase();
 });
+
+let database = {};
+function postDatabase(id, pos, type, attributes) {
+	database[id] = {
+		type: type,
+		pos: pos,
+		attributes: attributes,
+	};
+}
+
+function getDatabase(id) {
+	return database[id];
+}
+
+function updateDatabase(id, attributes) {
+	database[id].attributes = attributes;
+}
+
+function preloadDatabase() {
+	let pos = { lat: 44.5680489, lng: -123.274608 };
+	addMarker(pos, "Restroom", 0);
+	postDatabase(0, pos, "Restroom", [
+		{ name: "Single user", type: "Bool", value: undefined },
+		{ name: "Gender inclusive", type: "Bool", value: true },
+		{ name: "Baby-changing station", type: "Bool", value: true },
+		{ name: "Sanitary products", type: "Bool", value: false },
+		{ name: "Free to use", type: "Bool", value: true },
+	]);
+
+	pos = { lat: 44.5660311, lng: -123.2817719 };
+	addMarker(pos, "VendingMachine", 1);
+	postDatabase(1, pos, "Vending Machine", [
+		{ name: "Drinks", type: "Bool", value: true },
+		{ name: "Candy", type: "Bool", value: true },
+		{ name: "Food", type: "Bool", value: false },
+		{ name: "Accepts card", type: "Bool", value: true },
+		{ name: "Accepts cash", type: "Bool", value: undefined },
+	]);
+}
