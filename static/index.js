@@ -157,8 +157,10 @@ function addMarker(pos, type, id) {
 	});
 
 	google.maps.event.addListener(marker, "click", (e) => {
-		$("#hide-info-button").click();
-		populateMarkerInfo(id, marker, true);
+		if (getDatabase(id)) {
+			$("#hide-info-button").click();
+			populateMarkerInfo(id, marker, true);
+		}
 	});
 	markers.push({
 		id: id,
@@ -311,6 +313,11 @@ function createNewMarker(type, name) {
 
 	$("#hide-info-button").click();
 	populateMarkerInfo(markers.length - 1, marker, false, markerInfo);
+
+	// hide create menu
+	setTimeout(() => {
+		$(":focus").blur();
+	}, 50);
 }
 
 $("#marker-edit-button").click((e) => {
@@ -408,7 +415,7 @@ function updateDatabase(id, attributes) {
 }
 
 function preloadDatabase() {
-	let pos = { lat: 44.5680489, lng: -123.274608 };
+	let pos = { lat: 44.565137, lng: -123.2759781 };
 	addMarker(pos, "Restroom", 0);
 	postDatabase(0, pos, "Restroom", [
 		{ name: "Single user", type: "Bool", value: undefined },
@@ -427,4 +434,26 @@ function preloadDatabase() {
 		{ name: "Accepts card", type: "Bool", value: true },
 		{ name: "Accepts cash", type: "Bool", value: undefined },
 	]);
+
+	pos = { lat: 44.5658824, lng: -123.281383 };
+	addMarker(pos, "Restroom", 2);
+	postDatabase(2, pos, "Restroom", [
+		{ name: "Single user", type: "Bool", value: true },
+		{ name: "Gender inclusive", type: "Bool", value: true },
+		{ name: "Baby-changing station", type: "Bool", value: false },
+		{ name: "Sanitary products", type: "Bool", value: true },
+		{ name: "Free to use", type: "Bool", value: true },
+	]);
+
+	pos = { lat: 44.5645906, lng: -123.2758667 };
+	addMarker(pos, "PostalDropBox", 3);
+	postDatabase(3, pos, "Postal Drop Box", [{ name: "Collection time", type: "String", value: true }]);
+
+	pos = { lat: 44.5650628, lng: -123.2762856 };
+	addMarker(pos, "DrinkingFountain", 4);
+	postDatabase(4, pos, "Drinking Fountain", [{ name: "Water bottle filler", type: "Bool", value: true }]);
+
+	pos = { lat: 44.5652986, lng: -123.2796735 };
+	addMarker(pos, "BikeRack", 5);
+	postDatabase(5, pos, "Bike Rack", [{ name: "Covered", type: "Bool", value: true }]);
 }
