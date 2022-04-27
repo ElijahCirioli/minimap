@@ -329,6 +329,8 @@ select {
     color: var(--black);
     border-radius: 5px;
     background-color: var(--white);
+    position: absolute;
+    right: 20px;
 }
 select:focus {
     outline: none;

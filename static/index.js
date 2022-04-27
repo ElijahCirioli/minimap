@@ -270,13 +270,16 @@ function createNewMarker(type, name) {
 
 	marker = addMarker(markerPos, type);
 	marker.setDraggable(true);
+	google.maps.event.addListener(marker, "dragend", (e) => {
+		const coordString = e.latLng.lat().toFixed(7) + ", " + e.latLng.lng().toFixed(7);
+		$("#marker-info-coords").text(coordString);
+	});
 
 	const markerInfo = {
 		type: name,
 		pos: markerPos.toJSON(),
 		attributes: [],
 	};
-
 	for (const attr of markerAttributes[type]) {
 		markerInfo.attributes.push({ name: attr.name, value: undefined, type: attr.type });
 	}
