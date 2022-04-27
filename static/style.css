@@ -301,6 +301,14 @@ footer {
     justify-content: center;
     gap: 20px;
 }
+#marker-edit-buttons-wrap {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+}
 .marker-info-button {
     font-family: "Nunito", sans-serif;
     border: none;

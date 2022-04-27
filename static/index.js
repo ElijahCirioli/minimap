@@ -20,7 +20,7 @@ const markerAttributes = {
 		{ name: "Sanitary products", type: "Bool" },
 		{ name: "Free to use", type: "Bool" },
 	],
-	PostalDropBox: [{ name: "Collection time", type: "Int" }],
+	PostalDropBox: [{ name: "Collection time", type: "ShortString" }],
 	DrinkingFountain: [{ name: "Water bottle filler", type: "Bool" }],
 	VendingMachine: [
 		{ name: "Drinks", type: "Bool" },
@@ -30,8 +30,8 @@ const markerAttributes = {
 		{ name: "Accepts cash", type: "Bool" },
 	],
 	InterestPoint: [
-		{ name: "Name", type: "String" },
-		{ name: "Description", type: "String" },
+		{ name: "Name", type: "ShortString" },
+		{ name: "Description", type: "LongString" },
 	],
 };
 
@@ -156,7 +156,7 @@ function addMarker(pos, type) {
 	});
 }
 
-function populateMarkerInfo(data, marker) {
+function populateMarkerInfo(data, marker, exists) {
 	$("#marker-info-title").text(data.type);
 	const coordString = data.pos.lat.toFixed(7) + ", " + data.pos.lng.toFixed(7);
 	$("#marker-info-coords").text(coordString);
@@ -173,27 +173,50 @@ function populateMarkerInfo(data, marker) {
 		}
 
 		$("#marker-info-attributes-wrap").append(
-			`<div class="marker-info-attribute">${icon}<p class="${attrClass}">${attr.name}</p></div>`
+			`<div class="marker-info-attribute">
+				${icon}
+				<p class="${attrClass}">${attr.name}</p>
+				<select name="${attr.name}" hidden>
+					<option value="unknown">Unknown</option>
+					<option value="yes">Yes</option>
+					<option value="no">No</option>
+				</select>
+			</div>`
 		);
 	}
 
+	const icon = marker.getIcon();
+	const scaledIcon = {
+		url: icon.url,
+		scaledSize: new google.maps.Size(38, 38),
+		anchor: new google.maps.Point(19, 19),
+	};
+	marker.setIcon(scaledIcon);
+
 	$("#hide-info-button").off("click");
 	$("#hide-info-button").click((e) => {
-		marker.setMap(null);
+		if (!exists) {
+			marker.setMap(null);
+		} else {
+			marker.setIcon(icon);
+		}
+		$("#hide-info-button").off("click");
 		$("#marker-info-wrap").css("left", "-340px");
 		$("#create-marker-button").show();
 	});
 
 	$("#marker-info-wrap").css("left", 0);
+	$("#marker-info-buttons-wrap").show();
+	$("#marker-edit-buttons-wrap").hide();
 }
 
 function createNewMarker(type, name) {
-	const userPos = userMarker.getPosition();
+	const userPos = userMarker ? userMarker.getPosition() : undefined;
 	const bounds = map.getBounds();
 	let markerPos;
 	let marker;
 
-	if (bounds.contains(userPos)) {
+	if (userPos && bounds.contains(userPos)) {
 		// user marker is on screen
 		markerPos = userPos;
 	} else {
@@ -203,13 +226,6 @@ function createNewMarker(type, name) {
 
 	marker = addMarker(markerPos, type);
 	marker.setDraggable(true);
-	const icon = marker.getIcon();
-	const scaledIcon = {
-		url: icon.url,
-		scaledSize: new google.maps.Size(38, 38),
-		anchor: new google.maps.Point(19, 19),
-	};
-	marker.setIcon(scaledIcon);
 
 	const markerInfo = {
 		type: name,
@@ -221,10 +237,16 @@ function createNewMarker(type, name) {
 		markerInfo.attributes.push({ name: attr.name, value: undefined, type: attr.type });
 	}
 
-	populateMarkerInfo(markerInfo, marker);
+	populateMarkerInfo(markerInfo, marker, false);
 
 	$("#create-marker-button").hide();
 }
+
+$("#marker-edit-button").click((e) => {
+	$("select").show();
+	$("#marker-info-buttons-wrap").hide();
+	$("#marker-edit-buttons-wrap").show();
+});
 
 $("#bike-rack-button").click((e) => {
 	createNewMarker("BikeRack", "Bike Rack");
@@ -248,6 +270,10 @@ $("#drinking-fountain-button").click((e) => {
 
 $("#interest-point-button").click((e) => {
 	createNewMarker("InterestPoint", "Point of Interest");
+});
+
+$("#marker-info-attributes-wrap").on("submit", (e) => {
+	e.preventDefault();
 });
 
 $("#recenter-button").click(startLocationTracking);
