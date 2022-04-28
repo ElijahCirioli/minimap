@@ -382,6 +382,34 @@ $("#create-marker-button").on("focusout", (e) => {
 	$(".marker-type-button").hide();
 });
 
+$("#filter-title").click((e) => {
+	$("#filter-title").hide();
+	$("#filter-items").show();
+});
+
+$("#filter-wrap").on("focusout", (e) => {
+	$("#filter-items").hide();
+	$("#filter-title").show();
+});
+
+$(".filter-item").click((e) => {
+	const item = $(e.target);
+	const itemType = item.attr("id").split("-")[2];
+	let newMap = null;
+	if (item.hasClass("active-item")) {
+		item.removeClass("active-item");
+	} else {
+		item.addClass("active-item");
+		newMap = map;
+	}
+
+	for (const m of markers) {
+		if (m.type === itemType) {
+			m.marker.setMap(newMap);
+		}
+	}
+});
+
 $(document).ready(() => {
 	userId = window.localStorage.getItem("minimap-user-id");
 
@@ -456,4 +484,8 @@ function preloadDatabase() {
 	pos = { lat: 44.5652986, lng: -123.2796735 };
 	addMarker(pos, "BikeRack", 5);
 	postDatabase(5, pos, "Bike Rack", [{ name: "Covered", type: "Bool", value: true }]);
+
+	pos = { lat: 44.5649979, lng: -123.2784499 };
+	addMarker(pos, "DrinkingFountain", 6);
+	postDatabase(6, pos, "Drinking Fountain", [{ name: "Water bottle filler", type: "Bool", value: false }]);
 }

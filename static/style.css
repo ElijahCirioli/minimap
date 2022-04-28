@@ -2,9 +2,11 @@
     --purple: #5055d4;
     --light-purple: #5a5fe6;
     --green: #6aa84f;
+    --light-green: #70b054;
     --red: #d41c1c;
     --white: #ededed;
     --light-gray: #dedede;
+    --gray: #8f8f8f;
     --dark-gray: #828282;
     --darker-gray: #383838;
     --black: #0f0f0f;
@@ -22,8 +24,12 @@ body {
 header {
     background-color: var(--purple);
     height: 30px;
-    width: calc(100% - 10px);
+    width: calc(100% - 44px);
     padding: 10px 22px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
 }
 #logo {
     display: flex;
@@ -49,6 +55,55 @@ header {
 }
 .green-text {
     color: var(--green);
+}
+#filter-wrap {
+    margin-top: -1px;
+}
+#filter-title {
+    color: var(--white);
+    background-color: var(--green);
+    padding: 5px 15px;
+    border-radius: 18px;
+    font-family: "Nunito", sans-serif;
+    font-size: 16px;
+    font-weight: normal;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out, background-color 0.3s;
+}
+#filter-title:hover {
+    transform: scale(1.05);
+    background-color: var(--light-green);
+}
+#filter-title:active {
+    transform: scale(0.97);
+}
+#filter-items {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow: hidden;
+    border-radius: 18px;
+}
+.filter-item {
+    width: 25px;
+    height: auto;
+    padding: 4px;
+    background-color: var(--dark-gray);
+    cursor: pointer;
+    transition: background-color 0.3s;
+    filter: grayscale(1);
+}
+.filter-item:hover {
+    background-color: var(--gray);
+}
+.active-item {
+    background-color: var(--green);
+    filter: none;
+}
+.active-item:hover {
+    background-color: var(--light-green);
 }
 footer {
     background-color: var(--purple);
