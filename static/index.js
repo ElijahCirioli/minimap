@@ -180,26 +180,43 @@ function populateMarkerInfo(id, marker, exists, presetData) {
 
 	$("#marker-info-attributes-wrap").empty();
 	for (const attr of data.attributes) {
-		let icon = "<i class='fa fa-solid fa-circle-question'></i>";
-		let attrClass = "marker-attribute-false";
-		if (attr.value) {
-			icon = "<i class='fa fa-solid fa-circle-check'></i>";
-			attrClass = "marker-attribute-true";
-		} else if (attr.value === false) {
-			icon = "<i class='fa fa-solid fa-circle-xmark'></i>";
+		let icon = "";
+		if (attr.type === "Bool") {
+			icon = "<i class='fa fa-solid fa-circle-question'></i>";
+			attrClass = "marker-attribute-false";
+			if (attr.value) {
+				icon = "<i class='fa fa-solid fa-circle-check'></i>";
+				attrClass = "marker-attribute-true";
+			} else if (attr.value === false) {
+				icon = "<i class='fa fa-solid fa-circle-xmark'></i>";
+			}
+		}
+
+		let input = `<select name="${attr.name}" hidden>
+						<option value="unknown" ${attr.value === undefined ? "selected" : ""}>Unknown</option>
+						<option value="yes" ${attr.value ? "selected" : ""}>Yes</option>
+						<option value="no" ${attr.value === false ? "selected" : ""}>No</option>
+					</select>`;
+		if (attr.type === "ShortString") {
+			input = `<input name="${attr.name}" class="text-input text-input-short" type="text" maxlength=100 autocomplete="off" spellcheck="false" value="${attr.value}">`;
+			attrClass = "marker-attribute-string";
+		} else if (attr.type === "LongString") {
+			input = `<textarea name="${attr.name}" class="text-input text-input-long" type="text" maxlength=256 autocomplete="off" spellcheck="false" value="${attr.value}"></textarea>`;
+			attrClass = "marker-attribute-string";
 		}
 
 		$("#marker-info-attributes-wrap").append(
 			`<div class="marker-info-attribute">
 				${icon}
-				<p class="${attrClass}">${attr.name}</p>
-				<select name="${attr.name}" hidden>
-					<option value="unknown" ${attr.value === undefined ? "selected" : ""}>Unknown</option>
-					<option value="yes" ${attr.value ? "selected" : ""}>Yes</option>
-					<option value="no" ${attr.value === false ? "selected" : ""}>No</option>
-				</select>
+				<p class="${attrClass}">${attr.name}${attr.type === "Bool" ? "" : ":"}</p>
+				${input}
 			</div>`
 		);
+
+		$(".text-input-long").on("keyup change input", (e) => {
+			const height = $(".text-input-long")[0].scrollHeight - 4;
+			$(".text-input-long").css("height", height + "px");
+		});
 	}
 
 	$("select").on("change", (e) => {
@@ -327,31 +344,59 @@ $("#marker-edit-button").click((e) => {
 });
 
 $("#bike-rack-button").click((e) => {
+	if (!$("#filter-item-BikeRack").hasClass("active-item")) {
+		$("#filter-item-BikeRack").click();
+	}
 	createNewMarker("BikeRack", "Bike Rack");
 });
 
 $("#restroom-button").click((e) => {
+	if (!$("#filter-item-Restroom").hasClass("active-item")) {
+		$("#filter-item-Restroom").click();
+	}
 	createNewMarker("Restroom", "Restroom");
 });
 
 $("#vending-machine-button").click((e) => {
+	if (!$("#filter-item-VendingMachine").hasClass("active-item")) {
+		$("#filter-item-VendingMachine").click();
+	}
 	createNewMarker("VendingMachine", "Vending Machine");
 });
 
 $("#postal-drop-box-button").click((e) => {
+	if (!$("#filter-item-PostalDropBox").hasClass("active-item")) {
+		$("#filter-item-PostalDropBox").click();
+	}
 	createNewMarker("PostalDropBox", "Postal Drop Box");
 });
 
 $("#drinking-fountain-button").click((e) => {
+	if (!$("#filter-item-DrinkingFountain").hasClass("active-item")) {
+		$("#filter-item-DrinkingFountain").click();
+	}
 	createNewMarker("DrinkingFountain", "Drinking Fountain");
 });
 
 $("#interest-point-button").click((e) => {
+	if (!$("#filter-item-InterestPoint").hasClass("active-item")) {
+		$("#filter-item-InterestPoint").click();
+	}
 	createNewMarker("InterestPoint", "Point of Interest");
 });
 
 $("#marker-info-attributes-wrap").on("submit", (e) => {
 	e.preventDefault();
+});
+
+$("#marker-share-button").click((e) => {
+	alert("This functionality will let you share a link directy to a marker.");
+});
+
+$("#marker-report-button").click((e) => {
+	alert(
+		"This functionality will let you report a marker as being inappropriate or inaccurate. This will lead to markers being removed from the database."
+	);
 });
 
 $("#recenter-button").click(startLocationTracking);

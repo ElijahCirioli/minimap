@@ -230,10 +230,11 @@ footer {
     width: 70px;
     height: 70px;
     border-radius: 50%;
-    transition: background-color 0.3s;
+    transition: background-color 0.3s !important;
+    cursor: pointer;
 }
 .round-button:hover {
-    background-color: var(--light-purple);
+    background-color: var(--light-purple) !important;
 }
 .square-button {
     width: 185px;
@@ -309,10 +310,13 @@ footer {
     font-size: 16px;
     display: flex;
     flex-direction: row;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: flex-start;
     gap: 15px;
+}
+.marker-attribute-string {
+    margin: 0;
 }
 .marker-attribute-false {
     color: var(--darker-gray);
@@ -331,6 +335,35 @@ footer {
 }
 .fa-circle-question {
     color: var(--dark-gray);
+}
+.text-input {
+    font-family: "Nunito", sans-serif;
+    border: none;
+    background: none;
+    outline: none;
+    font-size: 16px;   
+    color: var(--black);
+    border-radius: 5px;
+    cursor: default;
+    pointer-events: none;
+    padding: 2px 8px;
+}
+.text-input-editable {
+    cursor: text;
+    background-color: var(--white);
+    pointer-events: all;
+    outline: 1px solid var(--black);
+}
+.text-input-short {
+    width: 160px;
+    position: absolute;
+    right: 20px;
+}
+.text-input-long {
+    width: calc(100% - 16px);
+    margin-top: -8px;
+    resize: none;
+    height: 44px;
 }
 #hide-info-button {
     position: absolute;
