@@ -38,7 +38,7 @@ const markerAttributes = {
 
 function createMap() {
 	// create google maps object
-	map = new google.maps.Map(document.getElementById("map"), {
+	map = new google.maps.Map($("#map")[0], {
 		center: { lat: 44.565288, lng: -123.278921 },
 		zoom: 17,
 		zoomControl: true,
@@ -50,6 +50,7 @@ function createMap() {
 		streetViewControl: false,
 		rotateControl: true,
 		fullscreenControl: false,
+		clickableIcons: false,
 	});
 
 	// setup location search API
