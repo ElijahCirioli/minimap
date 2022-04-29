@@ -2,12 +2,11 @@ import express from "express";
 import { engine } from "express-handlebars";
 import fs from "fs";
 
-const credentials_path = "./credentials.json";
-let credentials = {
-	mapsKey: process.env.GMAPSKEY,
-};
-if (fs.existsSync(credentials_path)) {
-	credentials = JSON.parse(fs.readFileSync(credentials_path));
+// load in credentials for Google APIs
+const credentialsPath = "./credentials.json";
+let credentials = { mapsKey: process.env.GMAPSKEY };
+if (!credentials.mapsKey && fs.existsSync(credentialsPath)) {
+	credentials = JSON.parse(fs.readFileSync(credentialsPath));
 }
 if (!credentials.mapsKey) {
 	throw "Maps key not found";
