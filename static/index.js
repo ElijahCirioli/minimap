@@ -390,7 +390,7 @@ $("#marker-info-attributes-wrap").on("submit", (e) => {
 });
 
 $("#marker-share-button").click((e) => {
-	alert("This functionality will let you share a link directy to a marker.");
+	alert("This functionality will let you share a link directly to a marker.");
 });
 
 $("#marker-report-button").click((e) => {
