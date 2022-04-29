@@ -31,7 +31,7 @@ const markerAttributes = {
 		{ name: "Accepts cash", type: "Bool" },
 	],
 	InterestPoint: [
-		{ name: "Name", type: "ShortString" },
+		{ name: "Name", type: "ShortString", mandatory: true },
 		{ name: "Description", type: "LongString" },
 	],
 };
@@ -325,7 +325,8 @@ function createNewMarker(type, name) {
 		attributes: [],
 	};
 	for (const attr of markerAttributes[type]) {
-		markerInfo.attributes.push({ name: attr.name, value: undefined, type: attr.type });
+		const presetVal = attr.type === "Bool" ? undefined : "";
+		markerInfo.attributes.push({ name: attr.name, value: presetVal, type: attr.type });
 	}
 
 	$("#hide-info-button").click();
@@ -339,6 +340,7 @@ function createNewMarker(type, name) {
 
 $("#marker-edit-button").click((e) => {
 	$("select").show();
+	$(".text-input").addClass("text-input-editable");
 	$("#marker-info-buttons-wrap").hide();
 	$("#marker-edit-buttons-wrap").show();
 });

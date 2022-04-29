@@ -2,18 +2,15 @@ import express from "express";
 import { engine } from "express-handlebars";
 import fs from "fs";
 
-const credentials_path = "./credentials.json"
-let credentials = {}
-if (fs.existsSync(credentials_path)) { 
-	Object.assign(credentials, JSON.parse(fs.readFileSync(credentials_path)))
-	console.log(credentials)
+const credentials_path = "./credentials.json";
+let credentials = {
+	mapsKey: process.env.GMAPSKEY,
+};
+if (fs.existsSync(credentials_path)) {
+	credentials = JSON.parse(fs.readFileSync(credentials_path));
 }
-if (process.env.GMAPSKEY) {
-	credentials.mapsKey = process.env.GMAPSKEY
-}
-
 if (!credentials.mapsKey) {
-	throw "Maps key not found"
+	throw "Maps key not found";
 }
 
 const port = process.env.PORT || 3000;
