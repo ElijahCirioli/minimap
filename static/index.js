@@ -181,6 +181,7 @@ function populateMarkerInfo(id, marker, exists, presetData) {
 	$("#marker-info-attributes-wrap").empty();
 	for (const attr of data.attributes) {
 		let icon = "";
+		let attrClass;
 		if (attr.type === "Bool") {
 			icon = "<i class='fa fa-solid fa-circle-question'></i>";
 			attrClass = "marker-attribute-false";
@@ -201,7 +202,7 @@ function populateMarkerInfo(id, marker, exists, presetData) {
 			input = `<input name="${attr.name}" class="text-input text-input-short" type="text" maxlength=100 autocomplete="off" spellcheck="false" value="${attr.value}">`;
 			attrClass = "marker-attribute-string";
 		} else if (attr.type === "LongString") {
-			input = `<textarea name="${attr.name}" class="text-input text-input-long" type="text" maxlength=256 autocomplete="off" spellcheck="false">${attr.value}</textarea>`;
+			input = `<textarea name="${attr.name}" class="text-input text-input-long" maxlength=256 autocomplete="off" spellcheck="false">${attr.value}</textarea>`;
 			attrClass = "marker-attribute-string";
 		}
 
@@ -546,7 +547,9 @@ function preloadDatabase() {
 
 	pos = { lat: 44.5645906, lng: -123.2758667 };
 	addMarker(pos, "PostalDropBox", 3);
-	postDatabase(3, pos, "Postal Drop Box", [{ name: "Collection time", type: "String", value: true }]);
+	postDatabase(3, pos, "Postal Drop Box", [
+		{ name: "Collection time", type: "ShortString", value: "8:00am" },
+	]);
 
 	pos = { lat: 44.5650628, lng: -123.2762856 };
 	addMarker(pos, "DrinkingFountain", 4);
@@ -559,4 +562,36 @@ function preloadDatabase() {
 	pos = { lat: 44.5649979, lng: -123.2784499 };
 	addMarker(pos, "DrinkingFountain", 6);
 	postDatabase(6, pos, "Drinking Fountain", [{ name: "Water bottle filler", type: "Bool", value: false }]);
+
+	pos = { lat: 44.5667853, lng: -123.2757095 };
+	addMarker(pos, "PostalDropBox", 7);
+	postDatabase(7, pos, "Postal Drop Box", [
+		{ name: "Collection time", type: "ShortString", value: "12:30pm" },
+	]);
+
+	pos = { lat: 44.5661209, lng: -123.2750457 };
+	addMarker(pos, "BikeRack", 8);
+	postDatabase(8, pos, "Bike Rack", [{ name: "Covered", type: "Bool", value: false }]);
+
+	pos = { lat: 44.5651578, lng: -123.2776743 };
+	addMarker(pos, "InterestPoint", 9);
+	postDatabase(9, pos, "Point of Interest", [
+		{ name: "Name", type: "ShortString", value: "Statue" },
+		{
+			name: "Description",
+			type: "LongString",
+			value: "It's a statue, ya know? I don't really know much about it. I think it's a woman holding a diploma. That'll be me one day.",
+		},
+	]);
+
+	pos = { lat: 44.5640302, lng: -123.2806315 };
+	addMarker(pos, "InterestPoint", 10);
+	postDatabase(10, pos, "Point of Interest", [
+		{ name: "Name", type: "ShortString", value: "Stairs" },
+		{
+			name: "Description",
+			type: "LongString",
+			value: "Is this interesting? I don't think so.",
+		},
+	]);
 }
