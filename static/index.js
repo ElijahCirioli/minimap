@@ -65,7 +65,7 @@ function setupLocationSearch() {
 		componentRestrictions: { country: "us" },
 		fields: ["name", "geometry"],
 		strictBounds: false,
-		types: ["establishment"],
+		types: ["establishment", "geocode"],
 	};
 	locationSearch = new google.maps.places.Autocomplete($("#location-search")[0], options);
 	locationSearch.bindTo("bounds", map);
