@@ -31,7 +31,7 @@ const markerAttributes = {
 		{ name: "Accepts cash", type: "Bool" },
 	],
 	InterestPoint: [
-		{ name: "Name", type: "ShortString", mandatory: true },
+		{ name: "Name", type: "ShortString" },
 		{ name: "Description", type: "LongString" },
 	],
 };
@@ -201,7 +201,7 @@ function populateMarkerInfo(id, marker, exists, presetData) {
 			input = `<input name="${attr.name}" class="text-input text-input-short" type="text" maxlength=100 autocomplete="off" spellcheck="false" value="${attr.value}">`;
 			attrClass = "marker-attribute-string";
 		} else if (attr.type === "LongString") {
-			input = `<textarea name="${attr.name}" class="text-input text-input-long" type="text" maxlength=256 autocomplete="off" spellcheck="false" value="${attr.value}"></textarea>`;
+			input = `<textarea name="${attr.name}" class="text-input text-input-long" type="text" maxlength=256 autocomplete="off" spellcheck="false">${attr.value}</textarea>`;
 			attrClass = "marker-attribute-string";
 		}
 
@@ -213,11 +213,10 @@ function populateMarkerInfo(id, marker, exists, presetData) {
 			</div>`
 		);
 
-		$(".text-input-long").on("keyup change input", (e) => {
-			const height = $(".text-input-long")[0].scrollHeight - 4;
-			$(".text-input-long").css("height", height + "px");
-		});
+		$(".text-input-long").on("keyup change input", resizeTextInputs);
 	}
+
+	resizeTextInputs();
 
 	$("select").on("change", (e) => {
 		const val = e.target.value;
@@ -263,10 +262,25 @@ function populateMarkerInfo(id, marker, exists, presetData) {
 		marker.setIcon(icon);
 		marker.setDraggable(false);
 		const attributes = [];
-		$("select").each(function () {
-			const value = $(this).val() === "yes" ? true : $(this).val() === "no" ? false : undefined;
-			attributes.push({ name: $(this).attr("name"), value: value, type: "Bool" });
-		});
+		$("#marker-info-attributes-wrap")
+			.children()
+			.each(function (i) {
+				const select = $(this).children("select");
+				const input = $(this).children("input");
+				const textarea = $(this).children("textarea");
+				if (select.length > 0) {
+					const value = select.val() === "yes" ? true : select.val() === "no" ? false : undefined;
+					attributes.push({ name: select.attr("name"), value: value, type: "Bool" });
+				} else if (input.length > 0) {
+					attributes.push({ name: input.attr("name"), value: input.val(), type: "ShortString" });
+				} else if (textarea.length > 0) {
+					attributes.push({
+						name: textarea.attr("name"),
+						value: textarea.val(),
+						type: "LongString",
+					});
+				}
+			});
 
 		if (exists) {
 			// update database
@@ -336,6 +350,16 @@ function createNewMarker(type, name) {
 	setTimeout(() => {
 		$(":focus").blur();
 	}, 50);
+}
+
+function resizeTextInputs() {
+	if ($(".text-input-long").length === 0) {
+		return;
+	}
+	$(".text-input-long").css("height", "auto");
+	const height = $(".text-input-long")[0].scrollHeight;
+	const newHeight = Math.ceil(height / 21) * 21;
+	$(".text-input-long").css("height", newHeight + "px");
 }
 
 $("#marker-edit-button").click((e) => {

@@ -352,17 +352,21 @@ footer {
     background-color: var(--white);
     pointer-events: all;
     outline: 1px solid var(--black);
+    text-align: left !important;
 }
 .text-input-short {
     width: 160px;
     position: absolute;
     right: 20px;
+    text-align: right;
 }
 .text-input-long {
-    width: calc(100% - 16px);
+    width: 100%;
     margin-top: -8px;
     resize: none;
-    height: 44px;
+    height: 63px;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 #hide-info-button {
     position: absolute;
