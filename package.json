@@ -20,7 +20,8 @@
 	"dependencies": {
 		"express": "^4.17.3",
 		"express-handlebars": "^6.0.5",
-		"fs": "^0.0.1-security"
+		"fs": "^0.0.1-security",
+		"pg": "^8.7.3"
 	},
 	"type": "module"
 }
