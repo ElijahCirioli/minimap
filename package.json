@@ -23,5 +23,16 @@
 		"fs": "^0.0.1-security",
 		"pg": "^8.7.3"
 	},
-	"type": "module"
+	"type": "module",
+	"prettier": {
+		"arrowParens": "always",
+		"bracketSpacing": true,
+		"endOfLine": "lf",
+		"htmlWhitespaceSensitivity": "css",
+		"printWidth": 110,
+		"semi": true,
+		"tabWidth": 4,
+		"trailingComma": "es5",
+		"useTabs": true
+	}
 }
