@@ -147,7 +147,6 @@ function addMarker(pos, type, id) {
 		animation: google.maps.Animation.DROP,
 	});
 
-	console.log(marker);
 	const markerObj = {
 		id: id,
 		pos: pos,
@@ -299,7 +298,6 @@ function populateMarkerInfo(data, markerObj, exists) {
 				pos: markerObj.pos,
 				attributes: attributes,
 			};
-			console.log("posting", postData);
 
 			fetch("/postMarker", {
 				method: "POST",
@@ -310,7 +308,6 @@ function populateMarkerInfo(data, markerObj, exists) {
 			})
 				.then((res) => {
 					res.json().then((resJSON) => {
-						console.log(resJSON);
 						markerObj.id = parseInt(resJSON.id);
 						data.attributes = attributes;
 						populateMarkerInfo(data, markerObj, true);
@@ -355,7 +352,6 @@ function createNewMarker(type, name) {
 	}
 
 	markerObj = addMarker(markerPos, type, 0);
-	console.log(markerObj);
 	markerObj.marker.setDraggable(true);
 	google.maps.event.addListener(markerObj.marker, "dragend", (e) => {
 		const coordString = e.latLng.lat().toFixed(7) + ", " + e.latLng.lng().toFixed(7);
