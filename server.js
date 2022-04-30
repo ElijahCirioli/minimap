@@ -25,9 +25,7 @@ get it with heroku config:get DATABASE_URL --app osuminimap
 I think process.env.DATABASE_URL autopopulated with it on heroku side
 */
 function getDatabaseURL() {
-	return execSync("heroku config:get DATABASE_URL --app osuminimap")
-		.toString()
-		.trim();
+	return execSync("heroku config:get DATABASE_URL --app osuminimap").toString().trim();
 }
 
 const databaseURL = process.env.DATABASE_URL || getDatabaseURL();
@@ -111,9 +109,7 @@ const markerTypeVerbose = {
 
 function parseMarkerInfo(type, rows) {
 	if (rows.length > 1) {
-		console.log(
-			"WARNING: a markerInfo query received multiple rows-- it shouldn't have"
-		);
+		console.log("WARNING: a markerInfo query received multiple rows-- it shouldn't have");
 	}
 	const attributes = JSON.parse(JSON.stringify(dataDictionary[type])); // deep copy
 	for (const attr of attributes) {
@@ -124,17 +120,11 @@ function parseMarkerInfo(type, rows) {
 
 app.get("/markerInfo/:id", (req, res) => {
 	client
-		.query(
-			'SELECT type FROM public."Marker" WHERE "Marker"."markerID" = $1;',
-			[req.params.id]
-		)
+		.query('SELECT type FROM public."Marker" WHERE "Marker"."markerID" = $1;', [req.params.id])
 		.then((res1) => {
 			const type = res1.rows[0].type;
 			client
-				.query(
-					`SELECT * FROM public."${type}" WHERE "${type}"."markerID" = $1;`,
-					[req.params.id]
-				)
+				.query(`SELECT * FROM public."${type}" WHERE "${type}"."markerID" = $1;`, [req.params.id])
 				.then((res2) => {
 					res.status(200).json(parseMarkerInfo(type, res2.rows));
 				})
@@ -172,12 +162,12 @@ function quotify(str) {
 /* takes internal representations and converts to something more similar to
    database format */
 function parseData(data) {
-	let markerRepr = {
+	const markerRepr = {
 		latitude: data.pos.lng,
 		longitude: data.pos.lat,
 		category: data.category,
 	};
-	let infoRepr = {};
+	const infoRepr = {};
 	for (const attr of data.attributes) {
 		infoRepr[quotify(attr.columnName)] = attr.value;
 	}
@@ -185,8 +175,8 @@ function parseData(data) {
 }
 
 function parseInfoRepr(infoRepr) {
-	let columnStr = "(" + Object.keys(infoRepr).join(", ") + ")";
-	let dataStr = "(" + Object.values(infoRepr).join(", ") + ")";
+	const columnStr = "(" + Object.keys(infoRepr).join(", ") + ")";
+	const dataStr = "(" + Object.values(infoRepr).join(", ") + ")";
 	return [columnStr, dataStr];
 }
 
@@ -210,9 +200,7 @@ app.post("/postMarker", (req, res) => {
 						`INSERT INTO public."${markerRepr.category}" ${columnStr} VALUES ${dataStr};`
 					);
 					client
-						.query(
-							`INSERT INTO public."${markerRepr.category}" ${columnStr} VALUES ${dataStr};`
-						)
+						.query(`INSERT INTO public."${markerRepr.category}" ${columnStr} VALUES ${dataStr};`)
 						.then((info_res) => {
 							res.status(200).json({ id: receivedID });
 						})

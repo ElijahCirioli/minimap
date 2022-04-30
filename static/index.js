@@ -2,6 +2,7 @@ let map, userMarker, locationSearch;
 let positionWatchId;
 let userId;
 let markers = [];
+let attributeDictionary;
 
 const iconPaths = {
 	BikeRack: "icons/bike-rack.png",
@@ -12,17 +13,11 @@ const iconPaths = {
 	InterestPoint: "icons/interest-point.png",
 };
 
-let markerAttributes;
-fetch("/dictionary.json")
-	.then((res) => {
-		res.json().then((data) => {
-			markerAttributes = data;
-			console.log(markerAttributes);
-		});
-	})
-	.catch((e) => {
-		console.log("failed to load dictionary", e);
+function loadDictionary() {
+	$.get("/dictionary.json", (data) => {
+		attributeDictionary = data;
 	});
+}
 
 function createMap() {
 	// create google maps object
@@ -328,7 +323,7 @@ function createNewMarker(type, name) {
 		pos: markerPos.toJSON(),
 		attributes: [],
 	};
-	for (const attr of markerAttributes[type]) {
+	for (const attr of attributeDictionary[type]) {
 		const presetVal = attr.type === "Bool" ? undefined : "";
 		markerInfo.attributes.push({ name: attr.name, value: presetVal, type: attr.type });
 	}
@@ -483,6 +478,7 @@ $(document).ready(() => {
 		window.localStorage.setItem("minimap-user-id", userId);
 	}
 
+	loadDictionary();
 	preloadDatabase();
 });
 
@@ -508,14 +504,15 @@ function updateDatabase(id, attributes) {
 async function updatePGDatabase() {
 	const response = await fetch("/postMarker", {
 		method: "POST",
-		body: JSON.stringify(
-			{category: "BikeRack", pos: {lat: 2, lng: 3}, attributes: [
-				{name: "Covered", type: "Bool", value: true, columnName: "isCovered"}
-			]}),
+		body: JSON.stringify({
+			category: "BikeRack",
+			pos: { lat: 2, lng: 3 },
+			attributes: [{ name: "Covered", type: "Bool", value: true, columnName: "isCovered" }],
+		}),
 		headers: {
-		  "Content-Type": "application/json"
-		}
-	  })
+			"Content-Type": "application/json",
+		},
+	});
 }
 
 function preloadDatabase() {
