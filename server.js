@@ -3,6 +3,9 @@ import { engine } from "express-handlebars";
 import fs from "fs";
 import pkg from "pg";
 const { Client } = pkg;
+import { promisify } from "util";
+import { exec } from "child_process";
+const pexec = promisify(exec);
 
 /* CREDENTIALS FOR GOOGLE APIs (Maps)
  */
@@ -21,8 +24,13 @@ Notes:
 get it with heroku config:get DATABASE_URL --app osuminimap
 I think process.env.DATABASE_URL autopopulated with it on heroku side
 */
-const databaseURL =
-  "postgres://wvujnhbthsrjew:fdf6b1ada7acc999f3baef8fb8e9e6e3a6772077e9fd6ae9892c9b2deedea276@ec2-52-5-110-35.compute-1.amazonaws.com:5432/dbmr1i6lo00f4i";
+async function getDatabaseURL() {
+	const url = await pexec("heroku config:get DATABASE_URL --app osuminimap");
+	return url.stdout.trim();
+}
+
+const databaseURL = await getDatabaseURL();
+console.log("Database URL found:", databaseURL);
 
 const client = new Client({
   connectionString: databaseURL,
