@@ -25,7 +25,9 @@ get it with heroku config:get DATABASE_URL --app osuminimap
 I think process.env.DATABASE_URL autopopulated with it on heroku side
 */
 function getDatabaseURL() {
-	return execSync("heroku config:get DATABASE_URL --app osuminimap").toString().trim();
+	return execSync("heroku config:get DATABASE_URL --app osuminimap")
+		.toString()
+		.trim();
 }
 
 const databaseURL = process.env.DATABASE_URL || getDatabaseURL();
@@ -109,7 +111,9 @@ const markerTypeVerbose = {
 
 function parseMarkerInfo(type, rows) {
 	if (rows.length > 1) {
-		console.log("WARNING: a markerInfo query received multiple rows-- it shouldn't have");
+		console.log(
+			"WARNING: a markerInfo query received multiple rows-- it shouldn't have"
+		);
 	}
 	const attributes = JSON.parse(JSON.stringify(dataDictionary[type])); // deep copy
 	for (const attr of attributes) {
@@ -120,11 +124,17 @@ function parseMarkerInfo(type, rows) {
 
 app.get("/markerInfo/:id", (req, res) => {
 	client
-		.query('SELECT type FROM public."Marker" WHERE "Marker"."markerID" = $1;', [req.params.id])
+		.query(
+			'SELECT type FROM public."Marker" WHERE "Marker"."markerID" = $1;',
+			[req.params.id]
+		)
 		.then((res1) => {
 			const type = res1.rows[0].type;
 			client
-				.query(`SELECT * FROM public."${type}" WHERE "${type}"."markerID" = $1;`, [req.params.id])
+				.query(
+					`SELECT * FROM public."${type}" WHERE "${type}"."markerID" = $1;`,
+					[req.params.id]
+				)
 				.then((res2) => {
 					res.status(200).json(parseMarkerInfo(type, res2.rows));
 				})
@@ -156,58 +166,70 @@ function post_marker(data) {
 
 /* Turns columnName into "columnName", which is much preferable to PostgreSQL */
 function quotify(str) {
-	return `"${str}"`
+	return `"${str}"`;
 }
 
 /* takes internal representations and converts to something more similar to
    database format */
 function parseData(data) {
-	let markerRepr = {latitude: data.pos.lng, longitude: data.pos.lat, category: data.category}
-	let infoRepr = {}
+	let markerRepr = {
+		latitude: data.pos.lng,
+		longitude: data.pos.lat,
+		category: data.category,
+	};
+	let infoRepr = {};
 	for (const attr of data.attributes) {
-		infoRepr[quotify(attr.columnName)] = attr.value
+		infoRepr[quotify(attr.columnName)] = attr.value;
 	}
-	return [markerRepr, infoRepr]
+	return [markerRepr, infoRepr];
 }
 
 function parseInfoRepr(infoRepr) {
-	let columnStr = "(" + Object.keys(infoRepr).join(", ") + ")"
-	let dataStr = "(" + Object.values(infoRepr).join(", ") + ")"
-	return [columnStr, dataStr]
+	let columnStr = "(" + Object.keys(infoRepr).join(", ") + ")";
+	let dataStr = "(" + Object.values(infoRepr).join(", ") + ")";
+	return [columnStr, dataStr];
 }
 
 //TODO FIXME - if it fails to insert into info table, but is in Marker table, that's bad
 // In that case the placed Marker should be deleted
 app.post("/postMarker", (req, res) => {
-	const [markerRepr, infoRepr] = parseData(req.body)
+	const [markerRepr, infoRepr] = parseData(req.body);
 	client
-		.query(`INSERT INTO public."Marker" (latitude, longitude, type, date) VALUES ($1, $2, \'${markerRepr.category}\', LOCALTIMESTAMP);`, 
-				[markerRepr.latitude, markerRepr.longitude])
+		.query(
+			`INSERT INTO public."Marker" (latitude, longitude, type, date) VALUES ($1, $2, \'${markerRepr.category}\', LOCALTIMESTAMP);`,
+			[markerRepr.latitude, markerRepr.longitude]
+		)
 		.then((marker_res) => {
 			client
-				.query('SELECT lastval()')
+				.query("SELECT lastval()")
 				.then((lastval_res) => {
-					const receivedID = lastval_res.rows[0].lastval
-					infoRepr[quotify("markerID")] = receivedID
-					const [columnStr, dataStr] = parseInfoRepr(infoRepr)
-					console.log(`INSERT INTO public."${markerRepr.category}" ${columnStr} VALUES ${dataStr};`)
+					const receivedID = lastval_res.rows[0].lastval;
+					infoRepr[quotify("markerID")] = receivedID;
+					const [columnStr, dataStr] = parseInfoRepr(infoRepr);
+					console.log(
+						`INSERT INTO public."${markerRepr.category}" ${columnStr} VALUES ${dataStr};`
+					);
 					client
-						.query(`INSERT INTO public."${markerRepr.category}" ${columnStr} VALUES ${dataStr};`)
-						.then(info_res => {res.status(200).json({id: receivedID})})
+						.query(
+							`INSERT INTO public."${markerRepr.category}" ${columnStr} VALUES ${dataStr};`
+						)
+						.then((info_res) => {
+							res.status(200).json({ id: receivedID });
+						})
 						.catch((e) => {
 							console.log(e);
 							res.status(500).send("bad request");
-						})
+						});
 				})
 				.catch((e) => {
 					console.log(e);
 					res.status(500).send("bad request");
-				})
+				});
 		})
 		.catch((e) => {
 			console.log(e);
 			res.status(500).send("bad request");
-		})
+		});
 });
 
 app.listen(port, () => {
