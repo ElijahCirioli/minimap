@@ -1,8 +1,9 @@
 let map, userMarker, locationSearch;
 let positionWatchId;
 let userId;
-let markers = [];
 let attributeDictionary;
+
+const markers = [];
 
 const iconPaths = {
 	BikeRack: "icons/bike-rack.png",
@@ -34,6 +35,12 @@ function createMap() {
 		rotateControl: true,
 		fullscreenControl: false,
 		clickableIcons: false,
+	});
+
+	$.get("/markers", (data) => {
+		for (const marker of data) {
+			addMarker(marker.pos, marker.category, marker.id);
+		}
 	});
 
 	// setup location search API
@@ -140,26 +147,29 @@ function addMarker(pos, type, id) {
 		animation: google.maps.Animation.DROP,
 	});
 
-	google.maps.event.addListener(marker, "click", (e) => {
-		if (getDatabase(id)) {
-			$("#hide-info-button").click();
-			populateMarkerInfo(id, marker, true);
-		}
-	});
-	markers.push({
+	console.log(marker);
+	const markerObj = {
 		id: id,
+		pos: pos,
 		marker: marker,
-		type: type,
+		category: type,
+	};
+
+	google.maps.event.addListener(marker, "click", (e) => {
+		$.get(`/markerInfo/${markerObj.id}`, (data) => {
+			$("#hide-info-button").click();
+			populateMarkerInfo(data, markerObj, true);
+		});
 	});
 
-	return marker;
+	markers.push(markerObj);
+
+	return markerObj;
 }
 
-function populateMarkerInfo(id, marker, exists, presetData) {
-	const data = presetData || getDatabase(id);
-
-	$("#marker-info-title").text(data.type);
-	const coordString = data.pos.lat.toFixed(7) + ", " + data.pos.lng.toFixed(7);
+function populateMarkerInfo(data, markerObj, exists) {
+	$("#marker-info-title").text(data.category);
+	const coordString = markerObj.pos.lat.toFixed(7) + ", " + markerObj.pos.lng.toFixed(7);
 	$("#marker-info-coords").text(coordString);
 
 	$("#marker-info-attributes-wrap").empty();
@@ -177,16 +187,16 @@ function populateMarkerInfo(id, marker, exists, presetData) {
 			}
 		}
 
-		let input = `<select name="${attr.name}" hidden>
-						<option value="unknown" ${attr.value === undefined ? "selected" : ""}>Unknown</option>
+		let input = `<select name="${attr.name}+${attr.columnName}" hidden>
+						<option value="unknown" ${attr.value === null ? "selected" : ""}>Unknown</option>
 						<option value="yes" ${attr.value ? "selected" : ""}>Yes</option>
 						<option value="no" ${attr.value === false ? "selected" : ""}>No</option>
 					</select>`;
 		if (attr.type === "ShortString") {
-			input = `<input name="${attr.name}" class="text-input text-input-short" type="text" maxlength=100 autocomplete="off" spellcheck="false" value="${attr.value}">`;
+			input = `<input name="${attr.name}+${attr.columnName}" class="text-input text-input-short" type="text" maxlength=100 autocomplete="off" spellcheck="false" value="${attr.value}">`;
 			attrClass = "marker-attribute-string";
 		} else if (attr.type === "LongString") {
-			input = `<textarea name="${attr.name}" class="text-input text-input-long" maxlength=256 autocomplete="off" spellcheck="false">${attr.value}</textarea>`;
+			input = `<textarea name="${attr.name}+${attr.columnName}" class="text-input text-input-long" maxlength=256 autocomplete="off" spellcheck="false">${attr.value}</textarea>`;
 			attrClass = "marker-attribute-string";
 		}
 
@@ -222,20 +232,20 @@ function populateMarkerInfo(id, marker, exists, presetData) {
 		row.children("p").addClass(newClass);
 	});
 
-	const icon = marker.getIcon();
+	const icon = markerObj.marker.getIcon();
 	const scaledIcon = {
 		url: icon.url,
 		scaledSize: new google.maps.Size(40, 40),
 		anchor: new google.maps.Point(20, 20),
 	};
-	marker.setIcon(scaledIcon);
+	markerObj.marker.setIcon(scaledIcon);
 
 	$("#hide-info-button").off("click");
 	$("#hide-info-button").click((e) => {
 		if (!exists) {
-			marker.setMap(null);
+			markerObj.marker.setMap(null);
 		} else {
-			marker.setIcon(icon);
+			markerObj.marker.setIcon(icon);
 		}
 		$("#hide-info-button").off("click");
 		$("#marker-info-wrap").css("left", "-340px");
@@ -244,47 +254,81 @@ function populateMarkerInfo(id, marker, exists, presetData) {
 
 	$("#marker-edit-confirm-button").off("click");
 	$("#marker-edit-confirm-button").click((e) => {
-		marker.setIcon(icon);
-		marker.setDraggable(false);
+		markerObj.marker.setIcon(icon);
+		markerObj.marker.setDraggable(false);
 		const attributes = [];
 		$("#marker-info-attributes-wrap")
 			.children()
-			.each(function (i) {
+			.each(function () {
 				const select = $(this).children("select");
 				const input = $(this).children("input");
 				const textarea = $(this).children("textarea");
+
 				if (select.length > 0) {
-					const value = select.val() === "yes" ? true : select.val() === "no" ? false : undefined;
-					attributes.push({ name: select.attr("name"), value: value, type: "Bool" });
+					const attrName = select.attr("name").split("+")[0];
+					const colName = select.attr("name").split("+")[1];
+					const value = select.val() === "yes" ? true : select.val() === "no" ? false : null;
+					attributes.push({ name: attrName, value: value, type: "Bool", columnName: colName });
 				} else if (input.length > 0) {
-					attributes.push({ name: input.attr("name"), value: input.val(), type: "ShortString" });
-				} else if (textarea.length > 0) {
+					const attrName = input.attr("name").split("+")[0];
+					const colName = input.attr("name").split("+")[1];
 					attributes.push({
-						name: textarea.attr("name"),
+						name: attrName,
+						value: input.val(),
+						type: "ShortString",
+						columnName: colName,
+					});
+				} else if (textarea.length > 0) {
+					const attrName = textarea.attr("name").split("+")[0];
+					const colName = textarea.attr("name").split("+")[1];
+					attributes.push({
+						name: attrName,
 						value: textarea.val(),
 						type: "LongString",
+						columnName: colName,
 					});
 				}
 			});
 
 		if (exists) {
 			// update database
-			updateDatabase(id, attributes);
 		} else {
 			// add to database
-			postDatabase(id, marker.getPosition().toJSON(), data.type, attributes);
-		}
+			const postData = {
+				category: markerObj.category,
+				pos: markerObj.pos,
+				attributes: attributes,
+			};
+			console.log("posting", postData);
 
-		populateMarkerInfo(id, marker, true);
+			fetch("/postMarker", {
+				method: "POST",
+				body: JSON.stringify(postData),
+				headers: {
+					"Content-Type": "application/json",
+				},
+			})
+				.then((res) => {
+					res.json().then((resJSON) => {
+						console.log(resJSON);
+						markerObj.id = parseInt(resJSON.id);
+						data.attributes = attributes;
+						populateMarkerInfo(data, markerObj, true);
+					});
+				})
+				.catch((e) => {
+					console.log("failed to post", e);
+				});
+		}
 	});
 
 	$("#marker-edit-cancel-button").off("click");
 	$("#marker-edit-cancel-button").click((e) => {
-		if (!exists) {
-			$("#hide-info-button").click();
+		if (exists) {
+			markerObj.marker.setIcon(icon);
+			populateMarkerInfo(data, markerObj, true);
 		} else {
-			marker.setIcon(icon);
-			populateMarkerInfo(id, marker, exists);
+			$("#hide-info-button").click();
 		}
 	});
 
@@ -301,35 +345,34 @@ function createNewMarker(type, name) {
 	const userPos = userMarker ? userMarker.getPosition() : undefined;
 	const bounds = map.getBounds();
 	let markerPos;
-	let marker;
 
 	if (userPos && bounds.contains(userPos)) {
 		// user marker is on screen
-		markerPos = userPos;
+		markerPos = userPos.toJSON();
 	} else {
 		// user marker is off screen
-		markerPos = bounds.getCenter();
+		markerPos = bounds.getCenter().toJSON();
 	}
 
-	marker = addMarker(markerPos, type, markers.length);
-	marker.setDraggable(true);
-	google.maps.event.addListener(marker, "dragend", (e) => {
+	markerObj = addMarker(markerPos, type, 0);
+	console.log(markerObj);
+	markerObj.marker.setDraggable(true);
+	google.maps.event.addListener(markerObj.marker, "dragend", (e) => {
 		const coordString = e.latLng.lat().toFixed(7) + ", " + e.latLng.lng().toFixed(7);
 		$("#marker-info-coords").text(coordString);
 	});
 
 	const markerInfo = {
-		type: name,
-		pos: markerPos.toJSON(),
-		attributes: [],
+		category: name,
+		pos: markerPos,
+		attributes: JSON.parse(JSON.stringify(attributeDictionary[type])),
 	};
-	for (const attr of attributeDictionary[type]) {
-		const presetVal = attr.type === "Bool" ? undefined : "";
-		markerInfo.attributes.push({ name: attr.name, value: presetVal, type: attr.type });
+	for (const attr of markerInfo.attributes) {
+		attr.value = attr.type === "Bool" ? null : "";
 	}
 
 	$("#hide-info-button").click();
-	populateMarkerInfo(markers.length - 1, marker, false, markerInfo);
+	populateMarkerInfo(markerInfo, markerObj, false);
 
 	// hide create menu
 	setTimeout(() => {
@@ -460,7 +503,7 @@ $(".filter-item").click((e) => {
 	}
 
 	for (const m of markers) {
-		if (m.type === itemType) {
+		if (m.category === itemType) {
 			m.marker.setMap(newMap);
 		}
 	}
@@ -479,47 +522,13 @@ $(document).ready(() => {
 	}
 
 	loadDictionary();
-	preloadDatabase();
 });
-
-let database = {};
-function postDatabase(id, pos, type, attributes) {
-	database[id] = {
-		type: type,
-		pos: pos,
-		attributes: attributes,
-	};
-}
-
-function getDatabase(id) {
-	return database[id];
-}
-
-function updateDatabase(id, attributes) {
-	database[id].attributes = attributes;
-}
-
-// for my testing purposes, leaving it in for you
-// maybe it'll save you a couple minutes
-async function updatePGDatabase() {
-	const response = await fetch("/postMarker", {
-		method: "POST",
-		body: JSON.stringify({
-			category: "BikeRack",
-			pos: { lat: 2, lng: 3 },
-			attributes: [{ name: "Covered", type: "Bool", value: true, columnName: "isCovered" }],
-		}),
-		headers: {
-			"Content-Type": "application/json",
-		},
-	});
-}
 
 function preloadDatabase() {
 	let pos = { lat: 44.565137, lng: -123.2759781 };
 	addMarker(pos, "Restroom", 0);
 	postDatabase(0, pos, "Restroom", [
-		{ name: "Single user", type: "Bool", value: undefined },
+		{ name: "Single user", type: "Bool", value: null },
 		{ name: "Gender inclusive", type: "Bool", value: true },
 		{ name: "Baby-changing station", type: "Bool", value: true },
 		{ name: "Sanitary products", type: "Bool", value: false },
@@ -533,7 +542,7 @@ function preloadDatabase() {
 		{ name: "Candy", type: "Bool", value: true },
 		{ name: "Food", type: "Bool", value: false },
 		{ name: "Accepts card", type: "Bool", value: true },
-		{ name: "Accepts cash", type: "Bool", value: undefined },
+		{ name: "Accepts cash", type: "Bool", value: null },
 	]);
 
 	pos = { lat: 44.5658824, lng: -123.281383 };

@@ -122,6 +122,10 @@ app.get("/markerInfo/:id", (req, res) => {
 	client
 		.query('SELECT type FROM public."Marker" WHERE "Marker"."markerID" = $1;', [req.params.id])
 		.then((res1) => {
+			if (res1.rows.length !== 1) {
+				console.log(res1.rows.length + " rows returned, 1 expected");
+			}
+
 			const type = res1.rows[0].type;
 			client
 				.query(`SELECT * FROM public."${type}" WHERE "${type}"."markerID" = $1;`, [req.params.id])
@@ -163,8 +167,8 @@ function quotify(str) {
    database format */
 function parseData(data) {
 	const markerRepr = {
-		latitude: data.pos.lng,
-		longitude: data.pos.lat,
+		latitude: data.pos.lat,
+		longitude: data.pos.lng,
 		category: data.category,
 	};
 	const infoRepr = {};
@@ -176,7 +180,17 @@ function parseData(data) {
 
 function parseInfoRepr(infoRepr) {
 	const columnStr = "(" + Object.keys(infoRepr).join(", ") + ")";
-	const dataStr = "(" + Object.values(infoRepr).join(", ") + ")";
+	const dataStr =
+		"(" +
+		Object.values(infoRepr)
+			.map((val) => {
+				if (val === null) {
+					return "NULL";
+				}
+				return val;
+			})
+			.join(", ") +
+		")";
 	return [columnStr, dataStr];
 }
 
