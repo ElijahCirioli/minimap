@@ -1,0 +1,23 @@
+{
+	"BikeRack": [{ "name": "Covered", "type": "Bool", "columnName": "isCovered" }],
+	"Restroom": [
+		{ "name": "Single user", "type": "Bool", "columnName": "isCovered" },
+		{ "name": "Gender inclusive", "type": "Bool", "columnName": "isGenderInclusive" },
+		{ "name": "Baby-changing station", "type": "Bool", "columnName": "hasChangingStation" },
+		{ "name": "Sanitary products", "type": "Bool", "columnName": "hasSanitaryProducts" },
+		{ "name": "Free to use", "type": "Bool", "columnName": "isFree" }
+	],
+	"PostalDropBox": [{ "name": "Collection time", "type": "ShortString", "columnName": "collectionTime" }],
+	"DrinkingFountain": [{ "name": "Water bottle filler", "type": "Bool", "columnName": "hasBottleFiller" }],
+	"VendingMachine": [
+		{ "name": "Drinks", "type": "Bool", "columnName": "hasDrinks" },
+		{ "name": "Candy", "type": "Bool", "columnName": "hasCandy" },
+		{ "name": "Food", "type": "Bool", "columnName": "hasFood" },
+		{ "name": "Accepts card", "type": "Bool", "columnName": "acceptsCard" },
+		{ "name": "Accepts cash", "type": "Bool", "columnName": "acceptsCash" }
+	],
+	"InterestPoint": [
+		{ "name": "Name", "type": "ShortString", "columnName": "name" },
+		{ "name": "Description", "type": "LongString", "columnName": "description" }
+	]
+}
