@@ -503,6 +503,21 @@ function updateDatabase(id, attributes) {
 	database[id].attributes = attributes;
 }
 
+// for my testing purposes, leaving it in for you
+// maybe it'll save you a couple minutes
+async function updatePGDatabase() {
+	const response = await fetch("/postMarker", {
+		method: "POST",
+		body: JSON.stringify(
+			{category: "BikeRack", pos: {lat: 2, lng: 3}, attributes: [
+				{name: "Covered", type: "Bool", value: true, columnName: "isCovered"}
+			]}),
+		headers: {
+		  "Content-Type": "application/json"
+		}
+	  })
+}
+
 function preloadDatabase() {
 	let pos = { lat: 44.565137, lng: -123.2759781 };
 	addMarker(pos, "Restroom", 0);

@@ -61,11 +61,11 @@ app.get("/", (req, res) => {
 ENUMERATE MARKERS
 
 Spec:
-const markers = [{ type: "VendingMachine", pos: { lat: 2, lng: 2 }, id: 3 }];
+const markers = [{ category: "VendingMachine", pos: { lat: 2, lng: 2 }, id: 3, datetime: 2022-04-29 11:57 }];
 */
 function parseMarker(row) {
 	return {
-		type: row.type,
+		category: row.type,
 		pos: { lat: row.latitude, lng: row.longitude },
 		id: row.markerID,
 		datetime: row.date,
@@ -143,15 +143,72 @@ app.get("/markerInfo/:id", (req, res) => {
 POST MARKERS TO DATABASE
 
 Spec:
-let data = {type: "VendingMachine", pos: {lat: 2, lng: 3}, attributes: [
-	{name: "Accepts cash", type: "Bool", value: undefined }
+let data = {category: "VendingMachine", pos: {lat: 2, lng: 3}, attributes: [
+	{name: "Accepts cash", type: "Bool", value: undefined, columnName: "acceptsCash" }
 ]}
 function post_marker(data) {
 	// post to database
+	// use current datetime as "time", using LOCALTIMESTAMP
 	let id = 0;
 	return id;
 }
 */
+
+/* Turns columnName into "columnName", which is much preferable to PostgreSQL */
+function quotify(str) {
+	return `"${str}"`
+}
+
+/* takes internal representations and converts to something more similar to
+   database format */
+function parseData(data) {
+	let markerRepr = {latitude: data.pos.lng, longitude: data.pos.lat, category: data.category}
+	let infoRepr = {}
+	for (const attr of data.attributes) {
+		infoRepr[quotify(attr.columnName)] = attr.value
+	}
+	return [markerRepr, infoRepr]
+}
+
+function parseInfoRepr(infoRepr) {
+	let columnStr = "(" + Object.keys(infoRepr).join(", ") + ")"
+	let dataStr = "(" + Object.values(infoRepr).join(", ") + ")"
+	return [columnStr, dataStr]
+}
+
+//TODO FIXME - if it fails to insert into info table, but is in Marker table, that's bad
+// In that case the placed Marker should be deleted
+app.post("/postMarker", (req, res) => {
+	const [markerRepr, infoRepr] = parseData(req.body)
+	client
+		.query(`INSERT INTO public."Marker" (latitude, longitude, type, date) VALUES ($1, $2, \'${markerRepr.category}\', LOCALTIMESTAMP);`, 
+				[markerRepr.latitude, markerRepr.longitude])
+		.then((marker_res) => {
+			client
+				.query('SELECT lastval()')
+				.then((lastval_res) => {
+					const receivedID = lastval_res.rows[0].lastval
+					infoRepr[quotify("markerID")] = receivedID
+					const [columnStr, dataStr] = parseInfoRepr(infoRepr)
+					console.log(`INSERT INTO public."${markerRepr.category}" ${columnStr} VALUES ${dataStr};`)
+					client
+						.query(`INSERT INTO public."${markerRepr.category}" ${columnStr} VALUES ${dataStr};`)
+						.then(info_res => {res.status(200).json({id: receivedID})})
+						.catch((e) => {
+							console.log(e);
+							res.status(500).send("bad request");
+						})
+				})
+				.catch((e) => {
+					console.log(e);
+					res.status(500).send("bad request");
+				})
+		})
+		.catch((e) => {
+			console.log(e);
+			res.status(500).send("bad request");
+		})
+});
 
 app.listen(port, () => {
 	console.log("Server is listening on port " + port);
