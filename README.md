@@ -1,6 +1,6 @@
 <div align="center">
     <a href="https://osuminimap.herokuapp.com">
-        <img src="/.github/logo_im.PNG" alt="Minimap" width=400>
+        <img src="/.github/minimap-logo.png" alt="Minimap" width=400>
     </a>
     <p>Mapping app for finding and adding useful amenities around campus - Databases Project</p>
     <img src="https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white" alt="Node JS">
