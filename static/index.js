@@ -12,29 +12,17 @@ const iconPaths = {
 	InterestPoint: "icons/interest-point.png",
 };
 
-const markerAttributes = {
-	BikeRack: [{ name: "Covered", type: "Bool" }],
-	Restroom: [
-		{ name: "Single user", type: "Bool" },
-		{ name: "Gender inclusive", type: "Bool" },
-		{ name: "Baby-changing station", type: "Bool" },
-		{ name: "Sanitary products", type: "Bool" },
-		{ name: "Free to use", type: "Bool" },
-	],
-	PostalDropBox: [{ name: "Collection time", type: "ShortString" }],
-	DrinkingFountain: [{ name: "Water bottle filler", type: "Bool" }],
-	VendingMachine: [
-		{ name: "Drinks", type: "Bool" },
-		{ name: "Candy", type: "Bool" },
-		{ name: "Food", type: "Bool" },
-		{ name: "Accepts card", type: "Bool" },
-		{ name: "Accepts cash", type: "Bool" },
-	],
-	InterestPoint: [
-		{ name: "Name", type: "ShortString" },
-		{ name: "Description", type: "LongString" },
-	],
-};
+let markerAttributes;
+fetch("/dictionary.json")
+	.then((res) => {
+		res.json().then((data) => {
+			markerAttributes = data;
+			console.log(markerAttributes);
+		});
+	})
+	.catch((e) => {
+		console.log("failed to load dictionary", e);
+	});
 
 function createMap() {
 	// create google maps object
