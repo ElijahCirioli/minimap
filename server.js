@@ -29,7 +29,11 @@ async function getDatabaseURL() {
 	return url.stdout.trim();
 }
 
-const databaseURL = await getDatabaseURL();
+let databaseURL = process.env.DATABASE_URL
+
+if (!databaseURL) {
+	databaseURL = await getDatabaseURL();
+}
 console.log("Database URL found:", databaseURL);
 
 const client = new Client({
