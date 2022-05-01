@@ -163,6 +163,14 @@ function quotify(str) {
 	return `"${str}"`;
 }
 
+function buildInfoRepr(data) {
+	const infoRepr = {};
+	for (const attr of data.attributes) {
+		infoRepr[quotify(attr.columnName)] = attr.value === null ? "NULL" : attr.value;
+	}
+	return infoRepr;
+}
+
 /* takes internal representations and converts to something more similar to
    database format */
 function parseData(data) {
@@ -171,26 +179,12 @@ function parseData(data) {
 		longitude: data.pos.lng,
 		category: data.category,
 	};
-	const infoRepr = {};
-	for (const attr of data.attributes) {
-		infoRepr[quotify(attr.columnName)] = attr.value;
-	}
-	return [markerRepr, infoRepr];
+	return [markerRepr, buildInfoRepr(data)];
 }
 
 function parseInfoRepr(infoRepr) {
 	const columnStr = "(" + Object.keys(infoRepr).join(", ") + ")";
-	const dataStr =
-		"(" +
-		Object.values(infoRepr)
-			.map((val) => {
-				if (val === null) {
-					return "NULL";
-				}
-				return val;
-			})
-			.join(", ") +
-		")";
+	const dataStr = "(" + Object.values(infoRepr).join(", ") + ")";
 	return [columnStr, dataStr];
 }
 
@@ -210,9 +204,6 @@ app.post("/postMarker", (req, res) => {
 					const receivedID = lastval_res.rows[0].lastval;
 					infoRepr[quotify("markerID")] = receivedID;
 					const [columnStr, dataStr] = parseInfoRepr(infoRepr);
-					console.log(
-						`INSERT INTO public."${markerRepr.category}" ${columnStr} VALUES ${dataStr};`
-					);
 					client
 						.query(`INSERT INTO public."${markerRepr.category}" ${columnStr} VALUES ${dataStr};`)
 						.then((info_res) => {
@@ -222,6 +213,72 @@ app.post("/postMarker", (req, res) => {
 							console.log(e);
 							res.status(500).send("bad request");
 						});
+				})
+				.catch((e) => {
+					console.log(e);
+					res.status(500).send("bad request");
+				});
+		})
+		.catch((e) => {
+			console.log(e);
+			res.status(500).send("bad request");
+		});
+});
+
+/*
+EDIT INFORMATION COLUMNS OF EXISTING MARKERS
+
+marker data needs to have an `id` key, and an attribute list
+[{*columnName*, name, *value*, type}]
+
+Order of operations:
+check that the id exists on the marker data
+check that the id exists in the Marker table
+	SELECT 1 from public."Marker" where "markerID" = 70
+check that the id exists in the {category} table [optional?]
+update the data
+	Different than INSERTing, needs to be UPDATEd
+*/
+
+function buildUpdateStr(infoRepr) {
+	"columnname = value, columnname = value";
+	const columnStrings = [];
+	for (const attr of Object.keys(infoRepr)) {
+		columnStrings.push(`${attr} = ${infoRepr[attr].toString()}`);
+	}
+	return columnStrings.join(", ");
+}
+
+app.post("/editMarker", (req, res) => {
+	const data = req.body;
+	if (!data.id) {
+		console.log("No id given to edit");
+		res.status(500).send("bad request");
+	}
+	if (!data.category) {
+		console.log("No category given on marker data");
+		res.status(500).send("bad request");
+	}
+
+	const infoRepr = buildInfoRepr(data);
+	const [columnStr, dataStr] = parseInfoRepr(infoRepr);
+
+	client
+		.query('SELECT "markerID" from public."Marker" WHERE "markerID" = $1', [data.id])
+		.then((check_res) => {
+			if (check_res.rows.length != 1) {
+				console.log(
+					`markerID either not present or duplicated: returned ${check_res.rows.length} rows`
+				);
+				res.status(500).send("bad request");
+			}
+			client
+				.query(
+					`UPDATE public."${data.category}" SET ${buildUpdateStr(infoRepr)} WHERE "markerID" = $1`,
+					[data.id]
+				)
+				.then((insert_res) => {
+					res.status(200).send("Edited");
 				})
 				.catch((e) => {
 					console.log(e);
