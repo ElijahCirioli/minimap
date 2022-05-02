@@ -72,17 +72,15 @@ function parseMarker(row) {
 	};
 }
 
-app.get("/markers", (req, res) => {
-	client
-		.query('SELECT * FROM "Marker"')
-		.then((dbResult) => {
-			const rows = dbResult.rows.map(parseMarker);
-			res.status(200).json(rows);
-		})
-		.catch((e) => {
-			console.log(e);
-			res.status(500).send("bad request");
-		});
+app.get("/markers", async (req, res) => {
+	try {
+		const dbResult = await client.query('SELECT * FROM "Marker"');
+		const rows = dbResult.rows.map(parseMarker);
+		res.status(200).json(rows);
+	} catch (e) {
+		console.log(e);
+		res.status(500).send("bad request");
+	}
 });
 
 /*
