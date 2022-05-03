@@ -4,6 +4,7 @@ import fs from "fs";
 import pkg from "pg";
 const { Client } = pkg;
 import { execSync } from "child_process";
+import { isStringObject } from "util/types";
 
 const dataDictionary = JSON.parse(fs.readFileSync("static/dictionary.json"));
 
@@ -133,6 +134,8 @@ app.get("/markerInfo/:id", (req, res) => {
 		.then((res1) => {
 			if (res1.rows.length !== 1) {
 				console.log(res1.rows.length + " rows returned, 1 expected");
+				res.status(500).send("bad request");
+				return;
 			}
 
 			const type = res1.rows[0].type;
@@ -175,7 +178,14 @@ function quotify(str) {
 function buildInfoRepr(data) {
 	const infoRepr = {};
 	for (const attr of data.attributes) {
-		infoRepr[quotify(attr.columnName)] = attr.value === null ? "NULL" : attr.value;
+		const key = quotify(attr.columnName);
+		if (attr.value === null || attr.value === "") {
+			infoRepr[key] = "NULL";
+		} else if (attr.type === "ShortString" || attr.type === "LongString") {
+			infoRepr[key] = `'${attr.value}'`;
+		} else {
+			infoRepr[key] = attr.value;
+		}
 	}
 	return infoRepr;
 }
@@ -202,8 +212,8 @@ function parseInfoRepr(infoRepr) {
 app.post("/postMarker", (req, res) => {
 	const [markerRepr, infoRepr] = parseData(req.body);
 
-	if (!isValidCategory(data.category)) {
-		res.status(500).send("invalid category: " + data.category);
+	if (!isValidCategory(markerRepr.category)) {
+		res.status(500).send("invalid category: " + markerRepr.category);
 		return;
 	}
 
@@ -212,16 +222,16 @@ app.post("/postMarker", (req, res) => {
 			`INSERT INTO public."Marker" (latitude, longitude, type, date) VALUES ($1, $2, '${markerRepr.category}', LOCALTIMESTAMP);`,
 			[markerRepr.latitude, markerRepr.longitude]
 		)
-		.then((marker_res) => {
+		.then((markerRes) => {
 			client
 				.query("SELECT lastval()")
-				.then((lastval_res) => {
-					const receivedID = lastval_res.rows[0].lastval;
+				.then((lastvalRes) => {
+					const receivedID = lastvalRes.rows[0].lastval;
 					infoRepr[quotify("markerID")] = receivedID;
 					const [columnStr, dataStr] = parseInfoRepr(infoRepr);
 					client
 						.query(`INSERT INTO public."${markerRepr.category}" ${columnStr} VALUES ${dataStr};`)
-						.then((info_res) => {
+						.then((infoRes) => {
 							res.status(200).json({ id: receivedID });
 						})
 						.catch((e) => {
@@ -259,7 +269,7 @@ function buildUpdateStr(infoRepr) {
 	"columnname = value, columnname = value";
 	const columnStrings = [];
 	for (const attr of Object.keys(infoRepr)) {
-		columnStrings.push(`${attr} = ${infoRepr[attr].toString()}`);
+		columnStrings.push(`"${attr}" = "${infoRepr[attr].toString()}"`);
 	}
 	return columnStrings.join(", ");
 }
