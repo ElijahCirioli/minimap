@@ -63,6 +63,19 @@ ENUMERATE MARKERS
 Spec:
 const markers = [{ category: "VendingMachine", pos: { lat: 2, lng: 2 }, id: 3, datetime: 2022-04-29 11:57 }];
 */
+
+function isValidCategory(category) {
+	const validCategories = [
+		"Restroom",
+		"InterestPoint",
+		"VendingMachine",
+		"PostalDropBox",
+		"DrinkingFountain",
+		"BikeRack",
+	];
+	return validCategories.includes(category);
+}
+
 function parseMarker(row) {
 	return {
 		category: row.type,
@@ -73,14 +86,12 @@ function parseMarker(row) {
 }
 
 app.get("/markers", async (req, res) => {
-	try {
-		const dbResult = await client.query('SELECT * FROM "Marker"');
-		const rows = dbResult.rows.map(parseMarker);
-		res.status(200).json(rows);
-	} catch (e) {
+	const dbResult = await client.query('SELECT * FROM "Marker"').catch((e) => {
 		console.log(e);
 		res.status(500).send("bad request");
-	}
+	});
+	const rows = dbResult.rows.map(parseMarker);
+	res.status(200).json(rows);
 });
 
 /*
@@ -190,9 +201,15 @@ function parseInfoRepr(infoRepr) {
 // In that case the placed Marker should be deleted
 app.post("/postMarker", (req, res) => {
 	const [markerRepr, infoRepr] = parseData(req.body);
+
+	if (!isValidCategory(data.category)) {
+		res.status(500).send("invalid category: " + data.category);
+		return;
+	}
+
 	client
 		.query(
-			`INSERT INTO public."Marker" (latitude, longitude, type, date) VALUES ($1, $2, \'${markerRepr.category}\', LOCALTIMESTAMP);`,
+			`INSERT INTO public."Marker" (latitude, longitude, type, date) VALUES ($1, $2, '${markerRepr.category}', LOCALTIMESTAMP);`,
 			[markerRepr.latitude, markerRepr.longitude]
 		)
 		.then((marker_res) => {
@@ -256,6 +273,11 @@ app.post("/editMarker", (req, res) => {
 	if (!data.category) {
 		console.log("No category given on marker data");
 		res.status(500).send("bad request");
+	}
+
+	if (!isValidCategory(data.category)) {
+		res.status(500).send("invalid category: " + data.category);
+		return;
 	}
 
 	const infoRepr = buildInfoRepr(data);
