@@ -45,8 +45,14 @@ client.connect();
  */
 
 function logQuery(query) {
-	console.log("SQL:", query);
+	console.log("\tSQL:", query);
 	return query;
+}
+
+/* meant for user error messages, not for library tracebacks */
+function logError(err) {
+	console.log("\tERROR:", err);
+	return err;
 }
 
 function makeQuery(template, args) {
@@ -103,7 +109,7 @@ app.get("/markers", async (req, res) => {
 	console.log("INFO: /markers request");
 	const dbResult = await client.query(logQuery('SELECT * FROM "Marker"')).catch((e) => {
 		console.log(e);
-		res.status(500).send("bad request");
+		res.status(500).send("something went wrong");
 	});
 	const rows = dbResult.rows.map(parseMarker);
 	res.status(200).json(rows);
@@ -131,43 +137,48 @@ const markerTypeVerbose = {
 	InterestPoint: "Point of Interest",
 };
 
-function parseMarkerInfo(type, rows) {
-	if (rows.length > 1) {
-		console.log("WARNING: a markerInfo query received multiple rows-- it shouldn't have");
-	}
-	const attributes = JSON.parse(JSON.stringify(dataDictionary[type])); // deep copy
+function parseMarkerInfo(category, row) {
+	const attributes = JSON.parse(JSON.stringify(dataDictionary[category])); // deep copy
 	for (const attr of attributes) {
-		attr.value = rows[0][attr.columnName];
+		attr.value = row[attr.columnName];
 	}
-	return { category: markerTypeVerbose[type], attributes: attributes };
+	return { category: markerTypeVerbose[category], attributes: attributes };
 }
 
-app.get("/markerInfo/:id", (req, res) => {
+app.get("/markerInfo/:id", async (req, res) => {
 	console.log(`INFO: /markerInfo/${req.params.id} request`);
-	client
-		.query(makeQuery('SELECT type FROM public."Marker" WHERE "markerID" = %L', [req.params.id]))
-		.then((res1) => {
-			if (res1.rows.length !== 1) {
-				console.log(res1.rows.length + " rows returned, 1 expected");
-				res.status(500).send("bad request");
-				return;
-			}
+	let infoResult = undefined;
+	let category = undefined;
 
-			const type = res1.rows[0].type; // TODO: validate agaainst category list
-			client
-				.query(makeQuery(`SELECT * FROM public.%I WHERE "markerID" = %L`, [type, req.params.id]))
-				.then((res2) => {
-					res.status(200).json(parseMarkerInfo(type, res2.rows));
-				})
-				.catch((e) => {
-					console.log(e);
-					res.status(500).send("bad request");
-				});
-		})
-		.catch((e) => {
-			console.log(e);
-			res.status(500).send("bad request");
-		});
+	try {
+		const categoryResult = await client.query(
+			makeQuery('SELECT type FROM public."Marker" WHERE "markerID" = %L', [req.params.id])
+		);
+
+		if (categoryResult.rows.length !== 1) {
+			logError(res1.rows.length + " rows returned, 1 expected");
+			res.status(500).send("something went wrong");
+			return;
+		}
+
+		category = categoryResult.rows[0].type;
+
+		infoResult = await client.query(
+			makeQuery(`SELECT * FROM public.%I WHERE "markerID" = %L`, [category, req.params.id])
+		);
+
+		if (infoResult.rows.length > 1) {
+			logError(infoResult.rows.length + " rows returned, 1 expected");
+			res.status(500).send("something went wrong");
+			return;
+		}
+	} catch (e) {
+		console.log(e);
+		res.status(500).send("something went wrong");
+		return;
+	}
+
+	res.status(200).json(parseMarkerInfo(category, infoResult.rows[0]));
 });
 
 /*
@@ -223,7 +234,7 @@ app.post("/postMarker", async (req, res) => {
 		);
 	} catch (e) {
 		console.log(e);
-		res.status(500).send("bad request");
+		res.status(500).send("something went wrong");
 		return;
 	}
 
@@ -232,7 +243,7 @@ app.post("/postMarker", async (req, res) => {
 		infoRepr.markerID = lastvalResult.rows[0].lastval;
 	} catch (e) {
 		console.log(e);
-		res.status(500).send("bad request");
+		res.status(500).send("something went wrong");
 		return;
 	}
 
@@ -246,7 +257,7 @@ app.post("/postMarker", async (req, res) => {
 		);
 	} catch (e) {
 		console.log(e);
-		res.status(500).send("bad request");
+		res.status(500).send("something went wrong");
 		return;
 	}
 
@@ -288,17 +299,17 @@ function buildUpdateStr(infoRepr) {
 app.post("/editMarker", (req, res) => {
 	console.log("INFO: /editMarker request");
 	const data = req.body;
+
 	if (!data.id) {
-		console.log("No id given to edit");
-		res.status(500).send("bad request");
+		res.status(500).send(logError("No id given to edit"));
+		return;
 	}
 	if (!data.category) {
-		console.log("No category given on marker data");
-		res.status(500).send("bad request");
+		res.status(500).send(logError("No category given on marker data"));
+		return;
 	}
-
 	if (!isValidCategory(data.category)) {
-		res.status(500).send("invalid category: " + data.category);
+		res.status(500).send(logError("invalid category: " + data.category));
 		return;
 	}
 
@@ -308,10 +319,8 @@ app.post("/editMarker", (req, res) => {
 		.query(makeQuery('SELECT "markerID" from public."Marker" WHERE "markerID" = %L', [data.id]))
 		.then((check_res) => {
 			if (check_res.rows.length != 1) {
-				console.log(
-					`markerID either not present or duplicated: returned ${check_res.rows.length} rows`
-				);
-				res.status(500).send("bad request");
+				logError(`markerID either not present or duplicated: returned ${check_res.rows.length} rows`);
+				res.status(500).send("something went wrong");
 			}
 			client
 				.query(
@@ -327,12 +336,12 @@ app.post("/editMarker", (req, res) => {
 				})
 				.catch((e) => {
 					console.log(e);
-					res.status(500).send("bad request");
+					res.status(500).send("something went wrong");
 				});
 		})
 		.catch((e) => {
 			console.log(e);
-			res.status(500).send("bad request");
+			res.status(500).send("something went wrong");
 		});
 });
 
