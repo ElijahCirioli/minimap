@@ -65,6 +65,10 @@ function displayMarkerInfo(markerData, markerObj, existsInDb) {
 	resizeTextInputs();
 	setupMarkerInfoListeners(markerData, markerObj, existsInDb, markerIcon);
 
+	$("#marker-info-wrap").css("left", 0);
+	$("#marker-info-buttons-wrap").show();
+	$("#marker-edit-buttons-wrap").hide();
+
 	if (existsInDb) {
 		displayMarkerReviews(markerData, markerObj);
 	} else {
@@ -72,10 +76,6 @@ function displayMarkerInfo(markerData, markerObj, existsInDb) {
 		// go into edit mode if this marker was just created
 		$("#marker-edit-button").click();
 	}
-
-	$("#marker-info-wrap").css("left", 0);
-	$("#marker-info-buttons-wrap").show();
-	$("#marker-edit-buttons-wrap").hide();
 }
 
 function setupMarkerInfoListeners(markerData, markerObj, existsInDb, originalIcon) {
@@ -279,6 +279,7 @@ function postMarkerToDatabase(markerData, markerObj) {
 		attributes: markerData.attributes,
 	};
 
+	console.log(pos);
 	fetch("/postMarker", {
 		method: "POST",
 		body: JSON.stringify(postData),
@@ -314,7 +315,7 @@ function createNewMarker(type, name) {
 		markerPos = bounds.getCenter().toJSON();
 	}
 
-	markerObj = addMarker(markerPos, type, 0);
+	markerObj = addMarker(markerPos, type, -1);
 	markerObj.marker.setDraggable(true);
 	google.maps.event.addListener(markerObj.marker, "dragend", (e) => {
 		const coordString = e.latLng.lat().toFixed(7) + ", " + e.latLng.lng().toFixed(7);
@@ -498,12 +499,12 @@ $(".filter-item").click((e) => {
 
 $(document).ready(() => {
 	// load or generate a user ID
-	userId = window.localStorage.getItem("minimap-user-id");
+	userId = window.localStorage.getItem("minimap-user-id-int");
 	if (!userId) {
 		$.get("/generateUser")
 			.then((res) => {
-				userId = res.id;
-				window.localStorage.setItem("minimap-user-id", userId);
+				userId = parseInt(res.userID);
+				window.localStorage.setItem("minimap-user-id-int", userId);
 			})
 			.catch((e) => {
 				console.log("failed to generate user", e);

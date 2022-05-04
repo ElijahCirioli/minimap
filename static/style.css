@@ -283,6 +283,7 @@ footer {
     transition: left 0.3s ease-in;
     max-height: calc(100% - 30px);
     overflow-y: auto;
+    overflow-x: hidden;
 }
 #marker-info-title {
     color: var(--green);
@@ -320,6 +321,7 @@ footer {
 .marker-attribute-string {
     margin: 0;
     text-decoration: underline;
+    white-space: nowrap;
 }
 .marker-attribute-false {
     color: var(--darker-gray);
@@ -358,7 +360,8 @@ footer {
     outline: 1px solid var(--black);
 }
 .text-input-short {
-    flex-basis: 160px;
+    width: 150px;
+    flex-basis: 150px;
     position: relative;
     text-align: left;
     flex-grow: 1;
@@ -441,6 +444,7 @@ select:focus {
     flex-wrap: nowrap;
     align-items: center;
     overflow-y: auto;
+    overflow-x: hidden;
     width: 100%;
     gap: 12px;
     max-height: 180px;

@@ -157,6 +157,9 @@ function addMarker(pos, type, id) {
 
 	// add the click event
 	google.maps.event.addListener(marker, "click", (e) => {
+		if (markerObj.id === -1) {
+			return;
+		}
 		$.get(`/markerInfo/${markerObj.id}`, (data) => {
 			$("#hide-info-button").click();
 			displayMarkerInfo(data, markerObj, true);
