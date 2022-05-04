@@ -5,7 +5,6 @@ import pkg from "pg";
 import format from "pg-format";
 const { Client } = pkg;
 import { execSync } from "child_process";
-import { isStringObject } from "util/types";
 
 const dataDictionary = JSON.parse(fs.readFileSync("static/dictionary.json"));
 
