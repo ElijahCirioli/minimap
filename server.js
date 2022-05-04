@@ -128,6 +128,9 @@ function get_info(id_num) {
 		attributes: [
 			{name: "Accepts cash", type: "Bool", value: undefined }
 		]
+		reviews: [
+			{username: name, userID: int, description: string, rating: int}
+		]
 	}
 }
 */
@@ -140,17 +143,19 @@ const markerTypeVerbose = {
 	InterestPoint: "Point of Interest",
 };
 
-function parseMarkerInfo(category, row) {
+function parseMarkerInfo(category, infoRow, reviewRows) {
 	const attributes = JSON.parse(JSON.stringify(dataDictionary[category])); // deep copy
 	for (const attr of attributes) {
-		attr.value = row[attr.columnName];
+		attr.value = infoRow[attr.columnName];
 	}
-	return { category: markerTypeVerbose[category], attributes: attributes };
+
+	return { category: markerTypeVerbose[category], attributes: attributes, reviews: reviewRows };
 }
 
 app.get("/markerInfo/:id", async (req, res) => {
 	console.log(`INFO: /markerInfo/${req.params.id} request`);
 	let infoResult = undefined;
+	let reviewResult = undefined;
 	let category = undefined;
 
 	try {
@@ -175,13 +180,19 @@ app.get("/markerInfo/:id", async (req, res) => {
 			res.status(500).send("something went wrong");
 			return;
 		}
+
+		reviewResult = await client.query(
+			makeQuery('SELECT "userID", rating, description FROM public."Review" WHERE "markerID" = %L', [
+				req.params.id,
+			])
+		);
 	} catch (e) {
 		console.log(e);
 		res.status(500).send("something went wrong");
 		return;
 	}
 
-	res.status(200).json(parseMarkerInfo(category, infoResult.rows[0]));
+	res.status(200).json(parseMarkerInfo(category, infoResult.rows[0], reviewResult.rows));
 });
 
 /*
@@ -346,6 +357,108 @@ app.post("/editMarker", (req, res) => {
 			console.log(e);
 			res.status(500).send("something went wrong");
 		});
+});
+
+/*
+ADD REVIEW
+
+request body has the following attributes:
+userID : int : mandatory
+markerID : int : mandatory
+username : string : optional
+rating : int : mandatory
+description : string : optional
+
+Order of operations:
+Check inclusion and types
+
+Check if userID is already in User table
+If yes: update with new username / lack of username
+If no: insert username with username / lack of username
+Insert into Review the review data
+
+Note:
+Since the review primary key is userID and markerID, it is not possible for one user
+to review the same place twice. This will be handled by the database integrity constraint
+on the database's side, I don't think we need explicit handling of that on this end.
+*/
+
+app.post("/postReview", async (req, res) => {
+	console.log("INFO: /postReview request");
+	const data = req.body;
+
+	/* checking truthiness seems bad here because userID could technically
+	   be 0, so instead checks for null / undefined */
+	if (data.userID === undefined || data.userID === null) {
+		res.status(500).send(logError("request missing userID"));
+		return;
+	}
+	if (data.markerID === undefined || data.markerID === null) {
+		res.status(500).send(logError("request missing markerID"));
+		return;
+	}
+	if (data.rating === undefined || data.rating === null) {
+		res.status(500).send(logError("request missing rating"));
+		return;
+	}
+
+	if (typeof data.userID != "number") {
+		res.status(500).send(logError("request userID must be a number"));
+		return;
+	}
+	if (typeof data.markerID != "number") {
+		res.status(500).send(logError("request markerID must be a number"));
+		return;
+	}
+	if (data.username && typeof data.username != "string") {
+		res.status(500).send(logError("request username must be a number"));
+		return;
+	}
+	if (typeof data.rating != "number") {
+		res.status(500).send(logError("request rating must be a number"));
+		return;
+	}
+	if (data.description && typeof data.description != "string") {
+		res.status(500).send(logError("request description must be a string"));
+		return;
+	}
+
+	/* formatting tools can handle JS null, but not empty strings or undefined */
+	if (data.username === "" || data.username === undefined) {
+		data.username = null;
+	}
+	if (data.description === "" || data.username === undefined) {
+		data.description = null;
+	}
+
+	try {
+		let checkResult = await client.query(
+			makeQuery('SELECT * FROM public."User" WHERE "userID" = %L', [data.userID])
+		);
+		let inTable = checkResult.rows.length == 1;
+
+		if (inTable) {
+			await client.query(makeQuery('UPDATE public."User" SET username = %L', [data.username]));
+		} else {
+			await client.query(
+				makeQuery('INSERT INTO public."User" ("userID", username) VALUES (%L)', [
+					[data.userID, data.username],
+				])
+			);
+		}
+
+		await client.query(
+			makeQuery('INSERT INTO public."Review" ("userID", "markerID", rating, description) VALUES (%L)', [
+				[data.userID, data.markerID, data.rating, data.description],
+			])
+		);
+	} catch (e) {
+		console.log(e);
+		res.status(500).send("something went wrong");
+		return;
+	}
+
+	res.status(200).send("Ok");
 });
 
 app.listen(port, () => {
