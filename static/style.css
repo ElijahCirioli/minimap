@@ -426,3 +426,106 @@ select {
 select:focus {
     outline: none;
 }
+#marker-reviews-wrap {
+    width: 100%;
+    margin-top: 10px;
+}
+#reviews-scroll-wrap {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    align-items: center;
+    overflow-y: auto;
+    width: 100%;
+    gap: 12px;
+    max-height: 200px;
+}
+.star {
+    width: 20px;
+    height: auto;
+}
+.review-rating {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+}
+#review-creation-button {
+    color: var(--white);
+    background-color: var(--green);
+    padding: 4px 15px;
+    border-radius: 18px;
+    font-family: "Nunito", sans-serif;
+    font-size: 16px;
+    font-weight: normal;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out,
+    background-color 0.3s;
+    margin: 10px auto;
+    outline: none;
+    border: none;
+    display: block;
+}
+#review-creation-button:hover {
+    transform: scale(1.05);
+    background-color: var(--light-green);
+}
+#review-creation-button:active {
+    transform: scale(0.97);
+}
+.review-wrap {
+    background-color: var(--white);
+    border-radius: 15px;
+    padding: 8px 12px;
+    width: calc(100% - 24px);
+}
+.review-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+}
+.review-header h2 {
+    margin: 0;
+    font-size: 22px;
+    color: var(--black);
+    font-family: "Nunito", sans-serif;
+    font-weight: bold;
+}
+.review-header p {
+    margin: 0;
+    font-size: 16px;
+    color: var(--black);
+    font-family: "Nunito", sans-serif;
+    font-weight: bold;
+}
+.review-body {
+    width: 95%;
+    margin: 6px auto 2px auto;
+    font-size: 16px;
+    color: var(--darker-gray);
+    font-family: "Nunito", sans-serif;
+}
+::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+
+::-webkit-scrollbar-track {
+    background: #bbbbbb;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--green);
+    cursor: pointer;
+    transition: background 1s;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--light-green);
+}

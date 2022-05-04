@@ -65,14 +65,17 @@ function displayMarkerInfo(markerData, markerObj, existsInDb) {
 	resizeTextInputs();
 	setupMarkerInfoListeners(markerData, markerObj, existsInDb, markerIcon);
 
+	if (existsInDb) {
+		displayMarkerReviews(markerData, markerObj);
+	} else {
+		$("#marker-reviews-wrap").hide();
+		// go into edit mode if this marker was just created
+		$("#marker-edit-button").click();
+	}
+
 	$("#marker-info-wrap").css("left", 0);
 	$("#marker-info-buttons-wrap").show();
 	$("#marker-edit-buttons-wrap").hide();
-
-	// go into edit mode if this marker was just created
-	if (!existsInDb) {
-		$("#marker-edit-button").click();
-	}
 }
 
 function setupMarkerInfoListeners(markerData, markerObj, existsInDb, originalIcon) {
@@ -131,6 +134,10 @@ function setupMarkerInfoListeners(markerData, markerObj, existsInDb, originalIco
 			$("#hide-info-button").click();
 		}
 	});
+}
+
+function displayMarkerReviews(markerData, markerObj) {
+	$("#marker-reviews-wrap").show();
 }
 
 function collectMarkerAttributes() {
