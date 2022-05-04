@@ -281,6 +281,8 @@ footer {
     background-color: var(--light-gray);
     color: var(--black);
     transition: left 0.3s ease-in;
+    max-height: calc(100% - 30px);
+    overflow-y: auto;
 }
 #marker-info-title {
     color: var(--green);
@@ -439,7 +441,7 @@ select:focus {
     overflow-y: auto;
     width: 100%;
     gap: 12px;
-    max-height: 200px;
+    max-height: 180px;
 }
 .star {
     width: 20px;
