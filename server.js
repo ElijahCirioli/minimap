@@ -2,6 +2,7 @@ import express from "express";
 import { engine } from "express-handlebars";
 import fs from "fs";
 import pkg from "pg";
+import format from "pg-format";
 const { Client } = pkg;
 import { execSync } from "child_process";
 import { isStringObject } from "util/types";
@@ -40,6 +41,30 @@ const client = new Client({
 });
 client.connect();
 
+/* DATABASE UTILITIES
+ */
+
+function logQuery(query) {
+	console.log("SQL:", query);
+	return query;
+}
+
+function makeQuery(template, args) {
+	return logQuery(format.withArray(template, args));
+}
+
+function isValidCategory(category) {
+	const validCategories = [
+		"Restroom",
+		"InterestPoint",
+		"VendingMachine",
+		"PostalDropBox",
+		"DrinkingFountain",
+		"BikeRack",
+	];
+	return validCategories.includes(category);
+}
+
 /* EXPRESS SETUP
  */
 
@@ -65,18 +90,6 @@ Spec:
 const markers = [{ category: "VendingMachine", pos: { lat: 2, lng: 2 }, id: 3, datetime: 2022-04-29 11:57 }];
 */
 
-function isValidCategory(category) {
-	const validCategories = [
-		"Restroom",
-		"InterestPoint",
-		"VendingMachine",
-		"PostalDropBox",
-		"DrinkingFountain",
-		"BikeRack",
-	];
-	return validCategories.includes(category);
-}
-
 function parseMarker(row) {
 	return {
 		category: row.type,
@@ -87,7 +100,8 @@ function parseMarker(row) {
 }
 
 app.get("/markers", async (req, res) => {
-	const dbResult = await client.query('SELECT * FROM "Marker"').catch((e) => {
+	console.log("INFO: /markers request");
+	const dbResult = await client.query(logQuery('SELECT * FROM "Marker"')).catch((e) => {
 		console.log(e);
 		res.status(500).send("bad request");
 	});
@@ -129,8 +143,9 @@ function parseMarkerInfo(type, rows) {
 }
 
 app.get("/markerInfo/:id", (req, res) => {
+	console.log(`INFO: /markerInfo/${req.params.id} request`);
 	client
-		.query('SELECT type FROM public."Marker" WHERE "Marker"."markerID" = $1;', [req.params.id])
+		.query(makeQuery('SELECT type FROM public."Marker" WHERE "markerID" = %L', [req.params.id]))
 		.then((res1) => {
 			if (res1.rows.length !== 1) {
 				console.log(res1.rows.length + " rows returned, 1 expected");
@@ -138,9 +153,9 @@ app.get("/markerInfo/:id", (req, res) => {
 				return;
 			}
 
-			const type = res1.rows[0].type;
+			const type = res1.rows[0].type; // TODO: validate agaainst category list
 			client
-				.query(`SELECT * FROM public."${type}" WHERE "${type}"."markerID" = $1;`, [req.params.id])
+				.query(makeQuery(`SELECT * FROM public.%I WHERE "markerID" = %L`, [type, req.params.id]))
 				.then((res2) => {
 					res.status(200).json(parseMarkerInfo(type, res2.rows));
 				})
@@ -170,84 +185,72 @@ function post_marker(data) {
 }
 */
 
-/* Turns columnName into "columnName", which is much preferable to PostgreSQL */
-function quotify(str) {
-	return `"${str}"`;
-}
-
 function buildInfoRepr(data) {
 	const infoRepr = {};
 	for (const attr of data.attributes) {
-		const key = quotify(attr.columnName);
-		if (attr.value === null || attr.value === "") {
-			infoRepr[key] = "NULL";
-		} else if (attr.type === "ShortString" || attr.type === "LongString") {
-			infoRepr[key] = `'${attr.value}'`;
-		} else {
-			infoRepr[key] = attr.value;
-		}
+		infoRepr[attr.columnName] = attr.value === "" ? null : attr.value;
 	}
 	return infoRepr;
 }
 
-/* takes internal representations and converts to something more similar to
-   database format */
-function parseData(data) {
+function buildMarkerRepr(data) {
 	const markerRepr = {
 		latitude: data.pos.lat,
 		longitude: data.pos.lng,
-		category: data.category,
 	};
-	return [markerRepr, buildInfoRepr(data)];
-}
-
-function parseInfoRepr(infoRepr) {
-	const columnStr = "(" + Object.keys(infoRepr).join(", ") + ")";
-	const dataStr = "(" + Object.values(infoRepr).join(", ") + ")";
-	return [columnStr, dataStr];
+	return markerRepr;
 }
 
 //TODO FIXME - if it fails to insert into info table, but is in Marker table, that's bad
 // In that case the placed Marker should be deleted
-app.post("/postMarker", (req, res) => {
-	const [markerRepr, infoRepr] = parseData(req.body);
+app.post("/postMarker", async (req, res) => {
+	console.log("INFO: /postMarker request");
+	const markerRepr = buildMarkerRepr(req.body);
+	const markerCategory = req.body.category;
+	const infoRepr = buildInfoRepr(req.body);
 
-	if (!isValidCategory(markerRepr.category)) {
-		res.status(500).send("invalid category: " + markerRepr.category);
+	if (!isValidCategory(markerCategory)) {
+		res.status(500).send("invalid category: " + markerCategory);
 		return;
 	}
 
-	client
-		.query(
-			`INSERT INTO public."Marker" (latitude, longitude, type, date) VALUES ($1, $2, '${markerRepr.category}', LOCALTIMESTAMP);`,
-			[markerRepr.latitude, markerRepr.longitude]
-		)
-		.then((markerRes) => {
-			client
-				.query("SELECT lastval()")
-				.then((lastvalRes) => {
-					const receivedID = lastvalRes.rows[0].lastval;
-					infoRepr[quotify("markerID")] = receivedID;
-					const [columnStr, dataStr] = parseInfoRepr(infoRepr);
-					client
-						.query(`INSERT INTO public."${markerRepr.category}" ${columnStr} VALUES ${dataStr};`)
-						.then((infoRes) => {
-							res.status(200).json({ id: receivedID });
-						})
-						.catch((e) => {
-							console.log(e);
-							res.status(500).send("bad request");
-						});
-				})
-				.catch((e) => {
-					console.log(e);
-					res.status(500).send("bad request");
-				});
-		})
-		.catch((e) => {
-			console.log(e);
-			res.status(500).send("bad request");
-		});
+	try {
+		await client.query(
+			makeQuery(`INSERT INTO public."Marker" (%I,type) VALUES (%L,'${markerCategory}')`, [
+				Object.keys(markerRepr),
+				Object.values(markerRepr),
+			])
+		);
+	} catch (e) {
+		console.log(e);
+		res.status(500).send("bad request");
+		return;
+	}
+
+	try {
+		const lastvalResult = await client.query(logQuery("SELECT lastval()"));
+		infoRepr.markerID = lastvalResult.rows[0].lastval;
+	} catch (e) {
+		console.log(e);
+		res.status(500).send("bad request");
+		return;
+	}
+
+	try {
+		await client.query(
+			makeQuery("INSERT INTO public.%I (%I) VALUES (%L)", [
+				markerCategory,
+				Object.keys(infoRepr),
+				Object.values(infoRepr),
+			])
+		);
+	} catch (e) {
+		console.log(e);
+		res.status(500).send("bad request");
+		return;
+	}
+
+	res.status(200).json({ id: infoRepr.markerID });
 });
 
 /*
@@ -265,16 +268,25 @@ update the data
 	Different than INSERTing, needs to be UPDATEd
 */
 
+// outputs in a format like "columnname = value, columnname = value"
 function buildUpdateStr(infoRepr) {
-	"columnname = value, columnname = value";
-	const columnStrings = [];
+	const keyValueArr = [];
 	for (const attr of Object.keys(infoRepr)) {
-		columnStrings.push(`"${attr}" = "${infoRepr[attr].toString()}"`);
+		keyValueArr.push(attr);
+		keyValueArr.push(infoRepr[attr]);
 	}
-	return columnStrings.join(", ");
+
+	const fmtArr = [];
+	for (let i = 0; i < Object.keys(infoRepr).length; i++) {
+		fmtArr.push("%I = %L");
+	}
+	const fmt = fmtArr.join(", ");
+
+	return format.withArray(fmt, keyValueArr);
 }
 
 app.post("/editMarker", (req, res) => {
+	console.log("INFO: /editMarker request");
 	const data = req.body;
 	if (!data.id) {
 		console.log("No id given to edit");
@@ -291,10 +303,9 @@ app.post("/editMarker", (req, res) => {
 	}
 
 	const infoRepr = buildInfoRepr(data);
-	const [columnStr, dataStr] = parseInfoRepr(infoRepr);
 
 	client
-		.query('SELECT "markerID" from public."Marker" WHERE "markerID" = $1', [data.id])
+		.query(makeQuery('SELECT "markerID" from public."Marker" WHERE "markerID" = %L', [data.id]))
 		.then((check_res) => {
 			if (check_res.rows.length != 1) {
 				console.log(
@@ -304,8 +315,12 @@ app.post("/editMarker", (req, res) => {
 			}
 			client
 				.query(
-					`UPDATE public."${data.category}" SET ${buildUpdateStr(infoRepr)} WHERE "markerID" = $1`,
-					[data.id]
+					makeQuery(
+						`UPDATE public."${data.category}" SET ${buildUpdateStr(
+							infoRepr
+						)} WHERE "markerID" = %L`,
+						[data.id]
+					)
 				)
 				.then((insert_res) => {
 					res.status(200).send("Edited");
