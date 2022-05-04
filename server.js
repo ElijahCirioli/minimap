@@ -468,7 +468,7 @@ if USERNAME is NULL, return null
 otherwise, return USERNAME
 */
 
-app.get("/getUsername/:id", async (req, res) => {
+app.get("/username/:id", async (req, res) => {
 	console.log(`INFO: /getUsername/${req.params.id} request`);
 
 	try {
