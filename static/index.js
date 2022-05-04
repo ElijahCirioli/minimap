@@ -1,18 +1,5 @@
-let map, userMarker, locationSearch;
-let positionWatchId;
-let userId;
-let attributeDictionary;
-
-const markers = [];
-
-const iconPaths = {
-	BikeRack: "icons/bike-rack.png",
-	Restroom: "icons/restroom.png",
-	PostalDropBox: "icons/postal-drop-box.png",
-	DrinkingFountain: "icons/drinking-fountain.png",
-	VendingMachine: "icons/vending-machine.png",
-	InterestPoint: "icons/interest-point.png",
-};
+let userId; // tracks this user's identity
+let attributeDictionary; // defines entity attributes
 
 function loadDictionary() {
 	$.get("/dictionary.json", (data) => {
@@ -20,169 +7,36 @@ function loadDictionary() {
 	});
 }
 
-function createMap() {
-	// create google maps object
-	map = new google.maps.Map($("#map")[0], {
-		center: { lat: 44.565288, lng: -123.278921 },
-		zoom: 17,
-		zoomControl: true,
-		zoomControlOptions: {
-			position: google.maps.ControlPosition.LEFT_BOTTOM,
-		},
-		mapTypeControl: false,
-		scaleControl: false,
-		streetViewControl: false,
-		rotateControl: true,
-		fullscreenControl: false,
-		clickableIcons: false,
-	});
-
-	$.get("/markers", (data) => {
-		for (const marker of data) {
-			addMarker(marker.pos, marker.category, marker.id);
-		}
-	});
-
-	// setup location search API
-	setupLocationSearch();
-
-	// try to get the current user position
-	startLocationTracking();
-}
-
-function setupLocationSearch() {
-	// create location search object
-	const options = {
-		componentRestrictions: { country: "us" },
-		fields: ["name", "geometry"],
-		strictBounds: false,
-		types: ["establishment", "geocode"],
+function displayMarkerInfo(markerData, markerObj, existsInDb) {
+	// create a scaled version of the marker
+	const markerIcon = markerObj.marker.getIcon();
+	const scaledMarkerIcon = {
+		url: markerIcon.url,
+		scaledSize: new google.maps.Size(40, 40),
+		anchor: new google.maps.Point(20, 20),
 	};
-	locationSearch = new google.maps.places.Autocomplete($("#location-search")[0], options);
-	locationSearch.bindTo("bounds", map);
+	markerObj.marker.setIcon(scaledMarkerIcon);
 
-	// make sure the form won't cause the page to reload
-	$("#location-search-form").on("submit", (e) => {
-		e.preventDefault();
-	});
+	// update the title
+	$("#marker-info-title").text(markerData.category);
 
-	// trigger when a place is selected
-	locationSearch.addListener("place_changed", () => {
-		const place = locationSearch.getPlace();
-
-		// try to move the camera there
-		if (place.geometry && place.geometry.location) {
-			map.setCenter(place.geometry.location);
-			map.setZoom(17);
-			$("#location-search").val("");
-		} else if (place.geometry && place.geometry.viewport) {
-			map.fitBounds(place.geometry.viewport);
-			$("#location-search").val("");
-		} else {
-			alert("No location data available for this place");
-		}
-	});
-}
-
-function updateUserMarker(pos) {
-	if (userMarker) {
-		userMarker.setPosition(pos);
-	} else {
-		// create marker
-		userMarker = new google.maps.Marker({
-			position: pos,
-			map: map,
-			icon: {
-				url: "icons/person-outline.png",
-				scaledSize: new google.maps.Size(32, 47),
-				anchor: new google.maps.Point(16, 40),
-			},
-		});
-	}
-}
-
-function startLocationTracking() {
-	// make sure geolocation is supported
-	if (!navigator.geolocation) {
-		return;
-	}
-
-	if (positionWatchId) {
-		navigator.geolocation.clearWatch(positionWatchId);
-	}
-
-	let hasCentered = false;
-
-	positionWatchId = navigator.geolocation.watchPosition(
-		(position) => {
-			const pos = {
-				lat: position.coords.latitude,
-				lng: position.coords.longitude,
-			};
-
-			updateUserMarker(pos);
-
-			if (!hasCentered) {
-				map.setCenter(pos);
-				map.setZoom(17);
-				hasCentered = true;
-			}
-		},
-		(e) => {
-			console.log("unable to get geolocation data: ", e);
-		}
-	);
-}
-
-function addMarker(pos, type, id) {
-	const path = iconPaths[type];
-	const marker = new google.maps.Marker({
-		position: pos,
-		map: map,
-		icon: {
-			url: path,
-			scaledSize: new google.maps.Size(32, 32),
-			anchor: new google.maps.Point(16, 16),
-		},
-		animation: google.maps.Animation.DROP,
-	});
-
-	const markerObj = {
-		id: id,
-		pos: pos,
-		marker: marker,
-		category: type,
-	};
-
-	google.maps.event.addListener(marker, "click", (e) => {
-		$.get(`/markerInfo/${markerObj.id}`, (data) => {
-			$("#hide-info-button").click();
-			populateMarkerInfo(data, markerObj, true);
-		});
-	});
-
-	markers.push(markerObj);
-
-	return markerObj;
-}
-
-function populateMarkerInfo(data, markerObj, exists) {
-	$("#marker-info-title").text(data.category);
+	// display the coordinates
 	const coordString = markerObj.pos.lat.toFixed(7) + ", " + markerObj.pos.lng.toFixed(7);
 	$("#marker-info-coords").text(coordString);
 
+	// fill the attributes
 	$("#marker-info-attributes-wrap").empty();
-	for (const attr of data.attributes) {
-		let icon = "";
+	for (const attr of markerData.attributes) {
+		let attrIcon = "";
 		let attrClass;
 		if (attr.type === "Bool") {
-			icon = "<i class='fa fa-solid fa-circle-question'></i>";
+			attrIcon = "<i class='fa fa-solid fa-circle-question'></i>";
 			attrClass = "marker-attribute-false";
 			if (attr.value) {
-				icon = "<i class='fa fa-solid fa-circle-check'></i>";
+				attrIcon = "<i class='fa fa-solid fa-circle-check'></i>";
 				attrClass = "marker-attribute-true";
 			} else if (attr.value === false) {
-				icon = "<i class='fa fa-solid fa-circle-xmark'></i>";
+				attrIcon = "<i class='fa fa-solid fa-circle-xmark'></i>";
 			}
 		}
 
@@ -192,7 +46,7 @@ function populateMarkerInfo(data, markerObj, exists) {
 						<option value="no" ${attr.value === false ? "selected" : ""}>No</option>
 					</select>`;
 		if (attr.type === "ShortString") {
-			input = `<input name="${attr.name}+${attr.columnName}" class="text-input text-input-short" type="text" maxlength=100 autocomplete="off" spellcheck="false" value="${attr.value}">`;
+			input = `<input name="${attr.name}+${attr.columnName}" class="text-input text-input-short" type="text" maxlength=50 autocomplete="off" spellcheck="false" value="${attr.value}">`;
 			attrClass = "marker-attribute-string";
 		} else if (attr.type === "LongString") {
 			input = `<textarea name="${attr.name}+${attr.columnName}" class="text-input text-input-long" maxlength=256 autocomplete="off" spellcheck="false">${attr.value}</textarea>`;
@@ -201,50 +55,54 @@ function populateMarkerInfo(data, markerObj, exists) {
 
 		$("#marker-info-attributes-wrap").append(
 			`<div class="marker-info-attribute">
-				${icon}
+				${attrIcon}
 				<p class="${attrClass}">${attr.name}${attr.type === "Bool" ? "" : ":"}</p>
 				${input}
 			</div>`
 		);
-
-		$(".text-input-long").on("keyup change input", resizeTextInputs);
 	}
 
 	resizeTextInputs();
+	setupMarkerInfoListeners(markerData, markerObj, existsInDb, markerIcon);
 
+	$("#marker-info-wrap").css("left", 0);
+	$("#marker-info-buttons-wrap").show();
+	$("#marker-edit-buttons-wrap").hide();
+
+	// go into edit mode if this marker was just created
+	if (!existsInDb) {
+		$("#marker-edit-button").click();
+	}
+}
+
+function setupMarkerInfoListeners(markerData, markerObj, existsInDb, originalIcon) {
 	$("select").on("change", (e) => {
 		const val = e.target.value;
-		let newClass = "marker-attribute-false";
-		let newIcon = "<i class='fa fa-solid fa-circle-question'></i>";
+		let newAttrClass = "marker-attribute-false";
+		let newAttrIcon = "<i class='fa fa-solid fa-circle-question'></i>";
 		if (val === "yes") {
-			newClass = "marker-attribute-true";
-			newIcon = "<i class='fa fa-solid fa-circle-check'></i>";
+			newAttrClass = "marker-attribute-true";
+			newAttrIcon = "<i class='fa fa-solid fa-circle-check'></i>";
 		} else if (val === "no") {
-			newIcon = "<i class='fa fa-solid fa-circle-xmark'></i>";
+			newAttrIcon = "<i class='fa fa-solid fa-circle-xmark'></i>";
 		}
 
 		const row = $(e.target).parent();
 		row.children("i").remove();
-		row.prepend(newIcon);
+		row.prepend(newAttrIcon);
 		row.children("p").removeClass("marker-attribute-false");
 		row.children("p").removeClass("marker-attribute-true");
-		row.children("p").addClass(newClass);
+		row.children("p").addClass(newAttrClass);
 	});
 
-	const icon = markerObj.marker.getIcon();
-	const scaledIcon = {
-		url: icon.url,
-		scaledSize: new google.maps.Size(40, 40),
-		anchor: new google.maps.Point(20, 20),
-	};
-	markerObj.marker.setIcon(scaledIcon);
+	$(".text-input-long").on("keyup change input", resizeTextInputs);
 
 	$("#hide-info-button").off("click");
 	$("#hide-info-button").click((e) => {
-		if (!exists) {
+		if (!existsInDb) {
 			markerObj.marker.setMap(null);
 		} else {
-			markerObj.marker.setIcon(icon);
+			markerObj.marker.setIcon(originalIcon);
 		}
 		$("#hide-info-button").off("click");
 		$("#marker-info-wrap").css("left", "-340px");
@@ -253,89 +111,119 @@ function populateMarkerInfo(data, markerObj, exists) {
 
 	$("#marker-edit-confirm-button").off("click");
 	$("#marker-edit-confirm-button").click((e) => {
-		markerObj.marker.setIcon(icon);
+		markerObj.marker.setIcon(originalIcon);
 		markerObj.marker.setDraggable(false);
-		const attributes = [];
-		$("#marker-info-attributes-wrap")
-			.children()
-			.each(function () {
-				const select = $(this).children("select");
-				const input = $(this).children("input");
-				const textarea = $(this).children("textarea");
+		markerData.attributes = collectMarkerAttributes();
 
-				if (select.length > 0) {
-					const attrName = select.attr("name").split("+")[0];
-					const colName = select.attr("name").split("+")[1];
-					const value = select.val() === "yes" ? true : select.val() === "no" ? false : null;
-					attributes.push({ name: attrName, value: value, type: "Bool", columnName: colName });
-				} else if (input.length > 0) {
-					const attrName = input.attr("name").split("+")[0];
-					const colName = input.attr("name").split("+")[1];
-					attributes.push({
-						name: attrName,
-						value: input.val(),
-						type: "ShortString",
-						columnName: colName,
-					});
-				} else if (textarea.length > 0) {
-					const attrName = textarea.attr("name").split("+")[0];
-					const colName = textarea.attr("name").split("+")[1];
-					attributes.push({
-						name: attrName,
-						value: textarea.val(),
-						type: "LongString",
-						columnName: colName,
-					});
-				}
-			});
-
-		if (exists) {
-			// update database
+		if (existsInDb) {
+			updateMarkerInDatabase(markerData, markerObj);
 		} else {
-			// add to database
-			const postData = {
-				category: markerObj.category,
-				pos: markerObj.pos,
-				attributes: attributes,
-			};
-
-			fetch("/postMarker", {
-				method: "POST",
-				body: JSON.stringify(postData),
-				headers: {
-					"Content-Type": "application/json",
-				},
-			})
-				.then((res) => {
-					res.json().then((resJSON) => {
-						markerObj.id = parseInt(resJSON.id);
-						data.attributes = attributes;
-						populateMarkerInfo(data, markerObj, true);
-					});
-				})
-				.catch((e) => {
-					console.log("failed to post", e);
-				});
+			postMarkerToDatabase(markerData, markerObj);
 		}
 	});
 
 	$("#marker-edit-cancel-button").off("click");
 	$("#marker-edit-cancel-button").click((e) => {
-		if (exists) {
+		if (existsInDb) {
 			markerObj.marker.setIcon(icon);
-			populateMarkerInfo(data, markerObj, true);
+			displayMarkerInfo(markerData, markerObj, true);
 		} else {
 			$("#hide-info-button").click();
 		}
 	});
+}
 
-	$("#marker-info-wrap").css("left", 0);
-	$("#marker-info-buttons-wrap").show();
-	$("#marker-edit-buttons-wrap").hide();
+function collectMarkerAttributes() {
+	const attributes = [];
+	$("#marker-info-attributes-wrap")
+		.children()
+		.each(function () {
+			const select = $(this).children("select");
+			const input = $(this).children("input");
+			const textarea = $(this).children("textarea");
 
-	if (!exists) {
-		$("#marker-edit-button").click();
-	}
+			if (select.length > 0) {
+				const attrName = select.attr("name").split("+")[0];
+				const colName = select.attr("name").split("+")[1];
+				const value = select.val() === "yes" ? true : select.val() === "no" ? false : null;
+				attributes.push({ name: attrName, value: value, type: "Bool", columnName: colName });
+			} else if (input.length > 0) {
+				const attrName = input.attr("name").split("+")[0];
+				const colName = input.attr("name").split("+")[1];
+				attributes.push({
+					name: attrName,
+					value: input.val(),
+					type: "ShortString",
+					columnName: colName,
+				});
+			} else if (textarea.length > 0) {
+				const attrName = textarea.attr("name").split("+")[0];
+				const colName = textarea.attr("name").split("+")[1];
+				attributes.push({
+					name: attrName,
+					value: textarea.val(),
+					type: "LongString",
+					columnName: colName,
+				});
+			}
+		});
+
+	return attributes;
+}
+
+function updateMarkerInDatabase(markerData, markerObj) {
+	const postData = {
+		id: markerObj.id,
+		category: markerObj.category,
+		attributes: markerData.attributes,
+	};
+
+	fetch("/editMarker", {
+		method: "POST",
+		body: JSON.stringify(postData),
+		headers: {
+			"Content-Type": "application/json",
+		},
+	})
+		.then((res) => {
+			if (res.status === 200) {
+				displayMarkerInfo(markerData, markerObj, true);
+			} else {
+				console.log("failed to edit marker", res);
+			}
+		})
+		.catch((e) => {
+			console.log("failed to edit marker", e);
+		});
+}
+
+function postMarkerToDatabase(markerData, markerObj) {
+	const postData = {
+		category: markerObj.category,
+		pos: markerObj.pos,
+		attributes: markerData.attributes,
+	};
+
+	fetch("/postMarker", {
+		method: "POST",
+		body: JSON.stringify(postData),
+		headers: {
+			"Content-Type": "application/json",
+		},
+	})
+		.then((res) => {
+			if (res.status !== 200) {
+				console.log("failed to post", res);
+				return;
+			}
+			res.json().then((resJSON) => {
+				markerObj.id = parseInt(resJSON.id);
+				displayMarkerInfo(markerData, markerObj, true);
+			});
+		})
+		.catch((e) => {
+			console.log("failed to post", e);
+		});
 }
 
 function createNewMarker(type, name) {
@@ -368,7 +256,7 @@ function createNewMarker(type, name) {
 	}
 
 	$("#hide-info-button").click();
-	populateMarkerInfo(markerInfo, markerObj, false);
+	displayMarkerInfo(markerInfo, markerObj, false);
 
 	// hide create menu
 	setTimeout(() => {
@@ -490,6 +378,8 @@ $("#filter-wrap").on("focusout", (e) => {
 $(".filter-item").click((e) => {
 	const item = $(e.target);
 	const itemType = item.attr("id").split("-")[2];
+
+	// see which way it was just toggled
 	let newMap = null;
 	if (item.hasClass("active-item")) {
 		item.removeClass("active-item");
@@ -498,6 +388,7 @@ $(".filter-item").click((e) => {
 		newMap = map;
 	}
 
+	// update relevant markers
 	for (const m of markers) {
 		if (m.category === itemType) {
 			m.marker.setMap(newMap);
@@ -506,8 +397,8 @@ $(".filter-item").click((e) => {
 });
 
 $(document).ready(() => {
+	// load or generate a user ID
 	userId = window.localStorage.getItem("minimap-user-id");
-
 	if (!userId) {
 		const charSet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 		userId = "";
@@ -517,5 +408,6 @@ $(document).ready(() => {
 		window.localStorage.setItem("minimap-user-id", userId);
 	}
 
+	// fetch the data dictionary from the server
 	loadDictionary();
 });

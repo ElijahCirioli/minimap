@@ -3,7 +3,7 @@
 	"Restroom": [
 		{ "name": "Single user", "type": "Bool", "columnName": "isSingleUser" },
 		{ "name": "Gender inclusive", "type": "Bool", "columnName": "isGenderInclusive" },
-		{ "name": "Baby-changing station", "type": "Bool", "columnName": "hasChangingStation" },
+		{ "name": "Baby-changing station", "type": "Bool", "columnName": "hasChangingRoom" },
 		{ "name": "Sanitary products", "type": "Bool", "columnName": "hasSanitaryProducts" },
 		{ "name": "Free to use", "type": "Bool", "columnName": "isFree" }
 	],
