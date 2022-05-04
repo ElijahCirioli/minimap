@@ -8,8 +8,9 @@ import { execSync } from "child_process";
 
 const dataDictionary = JSON.parse(fs.readFileSync("static/dictionary.json"));
 
-/* CREDENTIALS FOR GOOGLE APIs (Maps)
- */
+/* 
+CREDENTIALS FOR GOOGLE APIs (Maps)
+*/
 const credentialsPath = "./credentials.json";
 let credentials = { mapsKey: process.env.GMAPSKEY };
 if (!credentials.mapsKey && fs.existsSync(credentialsPath)) {
@@ -19,7 +20,8 @@ if (!credentials.mapsKey) {
 	throw "Maps key not found";
 }
 
-/* CONNECT TO PG DATABASE HOSTED BY HEROKU
+/* 
+CONNECT TO PG DATABASE HOSTED BY HEROKU
 
 Notes:
 get it with heroku config:get DATABASE_URL --app osuminimap
@@ -40,8 +42,9 @@ const client = new Client({
 });
 client.connect();
 
-/* DATABASE UTILITIES
- */
+/* 
+DATABASE UTILITIES
+*/
 
 function logQuery(query) {
 	console.log("\tSQL:", query);
@@ -70,8 +73,9 @@ function isValidCategory(category) {
 	return validCategories.includes(category);
 }
 
-/* EXPRESS SETUP
- */
+/*
+EXPRESS SETUP
+*/
 
 const port = process.env.PORT || 3000;
 
