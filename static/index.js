@@ -46,10 +46,10 @@ function displayMarkerInfo(markerData, markerObj, existsInDb) {
 						<option value="no" ${attr.value === false ? "selected" : ""}>No</option>
 					</select>`;
 		if (attr.type === "ShortString") {
-			input = `<input name="${attr.name}+${attr.columnName}" class="text-input text-input-short" type="text" maxlength=50 autocomplete="off" spellcheck="false" value="${attr.value}">`;
+			input = `<input name="${attr.name}+${attr.columnName}" class="text-input text-input-short" type="text" maxlength="50" autocomplete="off" spellcheck="false" value="${attr.value}">`;
 			attrClass = "marker-attribute-string";
 		} else if (attr.type === "LongString") {
-			input = `<textarea name="${attr.name}+${attr.columnName}" class="text-input text-input-long" maxlength=256 autocomplete="off" spellcheck="false">${attr.value}</textarea>`;
+			input = `<textarea name="${attr.name}+${attr.columnName}" class="text-input text-input-long" maxlength="256" autocomplete="off" spellcheck="false">${attr.value}</textarea>`;
 			attrClass = "marker-attribute-string";
 		}
 
@@ -128,7 +128,7 @@ function setupMarkerInfoListeners(markerData, markerObj, existsInDb, originalIco
 	$("#marker-edit-cancel-button").off("click");
 	$("#marker-edit-cancel-button").click((e) => {
 		if (existsInDb) {
-			markerObj.marker.setIcon(icon);
+			markerObj.marker.setIcon(originalIcon);
 			displayMarkerInfo(markerData, markerObj, true);
 		} else {
 			$("#hide-info-button").click();
@@ -137,7 +137,75 @@ function setupMarkerInfoListeners(markerData, markerObj, existsInDb, originalIco
 }
 
 function displayMarkerReviews(markerData, markerObj) {
+	// display relevant entities
 	$("#marker-reviews-wrap").show();
+	$("#review-creation-wrap").hide();
+	$("#review-creation-button").show();
+	$("#reviews-scroll-wrap").show();
+	$("#average-review-rating").show();
+	if (markerData.reviews.length === 0) {
+		$("#average-review-rating").hide();
+	}
+
+	let totalRating = 0;
+	$("#reviews-scroll-wrap").empty();
+
+	// look at each review
+	for (const review of markerData.reviews) {
+		totalRating += review.rating;
+
+		// don't display if there's no description
+		if (review.description === null) {
+			continue;
+		}
+
+		// create the element
+		const revElement = $(`
+		<div class="review-wrap">
+			<div class="review-header">
+				<p></p>
+				<div class="review-rating">
+					<img class="star" src="icons/empty-star.png">
+					<img class="star" src="icons/empty-star.png">
+					<img class="star" src="icons/empty-star.png">
+					<img class="star" src="icons/empty-star.png">
+					<img class="star" src="icons/empty-star.png">
+				</div>
+			</div>
+			<p class="review-body"></p>
+		</div>`);
+
+		const name = review.username || "Anonymous";
+		revElement.children(".review-header").children("p").text(name);
+		revElement.children(".review-body").text(review.description);
+
+		// change the star icons
+		revElement
+			.children(".review-header")
+			.children(".review-rating")
+			.children(".star")
+			.each(function (i) {
+				if (i < review.rating) {
+					$(this).attr("src", "icons/full-star.png");
+				}
+			});
+
+		$("#reviews-scroll-wrap").append(revElement);
+	}
+
+	let halfStars = Math.round((2 * totalRating) / markerData.reviews.length);
+	$("#average-review-rating")
+		.children(".star")
+		.each(function () {
+			if (halfStars >= 2) {
+				$(this).attr("src", "icons/full-star.png");
+			} else if (halfStars > 1) {
+				$(this).attr("src", "icons/half-star.png");
+			} else {
+				$(this).attr("src", "icons/empty-star.png");
+			}
+			halfStars -= 2;
+		});
 }
 
 function collectMarkerAttributes() {
@@ -272,13 +340,12 @@ function createNewMarker(type, name) {
 }
 
 function resizeTextInputs() {
-	if ($(".text-input-long").length === 0) {
-		return;
-	}
 	$(".text-input-long").css("height", "auto");
-	const height = $(".text-input-long")[0].scrollHeight;
-	const newHeight = Math.ceil(height / 21) * 21;
-	$(".text-input-long").css("height", newHeight + "px");
+	$(".text-input-long").each(function () {
+		const height = $(this)[0].scrollHeight;
+		const newHeight = Math.ceil(height / 21) * 21;
+		$(this).css("height", newHeight + "px");
+	});
 }
 
 $("#marker-edit-button").click((e) => {
@@ -334,6 +401,10 @@ $("#marker-info-attributes-wrap").on("submit", (e) => {
 	e.preventDefault();
 });
 
+$("#review-creation-wrap").on("submit", (e) => {
+	e.preventDefault();
+});
+
 $("#marker-share-button").click((e) => {
 	alert("This functionality will let you share a link directly to a marker.");
 });
@@ -371,6 +442,28 @@ $("#create-marker-button").on("focusout", (e) => {
 	$(".marker-type-button").css("opacity", 0);
 	$(".marker-type-button").hide();
 });
+
+$("#review-creation-button").click((e) => {
+	// show appropriate elements
+	$("#review-creation-wrap").show();
+	$("#review-creation-button").hide();
+	$("#reviews-scroll-wrap").hide();
+
+	$("#review-body-input").val("");
+	$("#input-review-rating").children(".star").attr("src", "icons/empty-star.png");
+
+	$.get(`/username/${userId}`).then((res) => {
+		$("#review-name-input").val(res.username || "");
+	});
+});
+
+$("#input-review-rating")
+	.children(".star")
+	.click(function (e) {
+		$("#input-review-rating").children(".star").attr("src", "icons/empty-star.png");
+		$(this).prevAll(".star").attr("src", "icons/full-star.png");
+		$(this).attr("src", "icons/full-star.png");
+	});
 
 $("#filter-title").click((e) => {
 	$("#filter-title").hide();

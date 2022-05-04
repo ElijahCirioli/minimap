@@ -315,9 +315,11 @@ footer {
     align-items: center;
     justify-content: flex-start;
     gap: 15px;
+    width: 100%;
 }
 .marker-attribute-string {
     margin: 0;
+    text-decoration: underline;
 }
 .marker-attribute-false {
     color: var(--darker-gray);
@@ -354,19 +356,19 @@ footer {
     background-color: var(--white);
     pointer-events: all;
     outline: 1px solid var(--black);
-    text-align: left !important;
 }
 .text-input-short {
-    width: 160px;
-    position: absolute;
-    right: 20px;
-    text-align: right;
+    flex-basis: 160px;
+    position: relative;
+    text-align: left;
+    flex-grow: 1;
 }
 .text-input-long {
     width: 100%;
     margin-top: -8px;
     resize: none;
     height: 63px;
+    min-height: 63px;
     box-sizing: border-box;
     overflow: hidden;
 }
@@ -444,7 +446,7 @@ select:focus {
     max-height: 180px;
 }
 .star {
-    width: 20px;
+    width: 18px;
     height: auto;
 }
 .review-rating {
@@ -453,6 +455,7 @@ select:focus {
     align-items: center;
     justify-content: flex-start;
     flex-wrap: nowrap;
+    gap: 2px;
 }
 #review-creation-button {
     color: var(--white);
@@ -510,6 +513,60 @@ select:focus {
     font-size: 16px;
     color: var(--darker-gray);
     font-family: "Nunito", sans-serif;
+}
+#review-creation-wrap {
+    margin: 10px 0 13px 0;
+    outline: 2px solid var(--purple);
+}
+#review-name-input {
+    display: block;
+    position: relative;
+    margin: 0;
+    right: 0;
+    width: 130px;
+    flex-basis: 0;
+    flex-grow: 0;
+}
+#review-body-input {
+    display: block;
+    position: relative;
+    width: 95%;
+    margin: 8px auto;
+}
+#review-post-buttons-wrap {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-end;
+    width: 100%;
+    gap: 6px;
+}
+.review-post-button {
+    color: var(--white);
+    background-color: var(--green);
+    padding: 2px 10px;
+    border-radius: 16px;
+    font-family: "Nunito", sans-serif;
+    font-size: 16px;
+    font-weight: normal;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out,
+    background-color 0.3s;
+    margin: 0;
+    outline: none;
+    border: none;
+    display: block;
+}
+.review-post-button:hover {
+    transform: scale(1.05);
+    background-color: var(--light-green);
+}
+#input-review-rating .star {
+    cursor: pointer;
+}
+.review-post-button:active {
+    transform: scale(0.97);
 }
 ::-webkit-scrollbar {
     width: 5px;
