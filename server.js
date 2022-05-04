@@ -490,6 +490,30 @@ app.get("/username/:id", async (req, res) => {
 	}
 });
 
+/*
+GENERATE A NEW USERID AND PUT IT IN THE TABLE
+
+Returns userID as a string
+TODO: return it as int, also change postMarker to return integer markerID
+*/
+
+app.get("/generateUser", async (req, res) => {
+
+	try {
+		// INSERT INTO public."Marker" (%I,type) VALUES (%L,'${markerCategory}')
+		await client.query(logQuery('INSERT INTO public."User" (username) VALUES (NULL)'));
+
+		const lastvalResult = await client.query(logQuery("SELECT lastval()"));
+		res.status(200).json({userID: lastvalResult.rows[0].lastval});
+		return;
+
+	} catch (E) {
+		console.log(e);
+		res.status(500).send("something went wrong");
+		return;	
+	}
+});
+
 app.listen(port, () => {
 	console.log("Server is listening on port " + port);
 });
