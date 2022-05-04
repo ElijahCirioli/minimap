@@ -181,10 +181,9 @@ app.get("/markerInfo/:id", async (req, res) => {
 			return;
 		}
 
-		reviewResult = await client.query(
-			makeQuery('SELECT "userID", rating, description FROM public."Review" WHERE "markerID" = %L', [
-				req.params.id,
-			])
+		reviewResult = await client.query(makeQuery(
+			'SELECT "Review"."userID", "Review"."markerID", "Review".rating, "Review".description, "User".username FROM "Review" INNER JOIN "User" ON "Review"."userID" = "User"."userID" WHERE "Review"."markerID" = %L',
+			[req.params.id])
 		);
 	} catch (e) {
 		console.log(e);
@@ -459,6 +458,36 @@ app.post("/postReview", async (req, res) => {
 	}
 
 	res.status(200).send("Ok");
+});
+
+/*
+GET USERNAME FROM USERID
+
+if USERID isn't in database, return null
+if USERNAME is NULL, return null
+otherwise, return USERNAME
+*/
+
+app.get("/getUsername/:id", async (req, res) => {
+	console.log(`INFO: /getUsername/${req.params.id} request`);
+
+	try {
+		let userResult = await client.query(
+			makeQuery('SELECT username from public."User" WHERE "userID" = %L', [req.params.id])
+		);
+
+		if (userResult.rows.length === 0) {
+			res.status(200).json({ username: null });
+			return;
+		}
+
+		res.status(200).json({ username: userResult.rows[0].username });
+		return;
+	} catch (e) {
+		console.log(e);
+		res.status(500).send("something went wrong");
+		return;
+	}
 });
 
 app.listen(port, () => {
