@@ -500,12 +500,14 @@ $(document).ready(() => {
 	// load or generate a user ID
 	userId = window.localStorage.getItem("minimap-user-id");
 	if (!userId) {
-		const charSet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-		userId = "";
-		for (let i = 0; i < 20; i++) {
-			userId += charSet.charAt(Math.floor(Math.random() * charSet.length));
-		}
-		window.localStorage.setItem("minimap-user-id", userId);
+		$.get("/generateUser")
+			.then((res) => {
+				userId = res.id;
+				window.localStorage.setItem("minimap-user-id", userId);
+			})
+			.catch((e) => {
+				console.log("failed to generate user", e);
+			});
 	}
 
 	// fetch the data dictionary from the server
