@@ -243,15 +243,15 @@ function setupReviewButtons(markerData, markerObj) {
 		if (rating === 0) {
 			popupMessage(
 				"You must specify a star rating in order to post a review.",
-				`<i class="fa fa-solid fa-triangle-exclamation"></i>`,
-				"var(--red)"
+				`<i class="fa fa-solid fa-triangle-exclamation" style="color: var(--red);"></i>`
 			);
 			return;
 		}
 
+		const reviewText = $("#review-body-input").val();
 		const review = {
 			username: $("#review-name-input").val(),
-			description: $("#review-body-input").val(),
+			description: reviewText === "" ? null : reviewText,
 			markerID: markerObj.id,
 			userID: userId,
 			rating: rating,
@@ -347,15 +347,14 @@ function resizeTextInputs() {
 	});
 }
 
-function popupMessage(message, icon, iconColor) {
+function popupMessage(message, icon) {
 	if (popupTimeout) {
 		clearTimeout(popupTimeout);
 		popupTimeout = undefined;
 	}
 
-	const coloredIcon = $(icon).css("color", iconColor);
 	$("#popup-text").text(message);
-	$("#popup-text").prepend(coloredIcon);
+	$("#popup-text").prepend($(icon));
 	$("#popup-wrap").css("top", "0");
 
 	popupTimeout = setTimeout(() => {
