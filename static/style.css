@@ -448,6 +448,7 @@ select:focus {
     width: 100%;
     gap: 12px;
     max-height: 180px;
+    margin-top: 10px;
 }
 .star {
     width: 18px;
@@ -472,7 +473,7 @@ select:focus {
     cursor: pointer;
     transition: transform 0.2s ease-in-out,
     background-color 0.3s;
-    margin: 10px auto;
+    margin: 10px auto 0 auto;
     outline: none;
     border: none;
     display: block;

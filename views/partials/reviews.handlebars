@@ -1,0 +1,31 @@
+<div id="marker-reviews-wrap" hidden>
+    <div class="review-header">
+        <h2>Reviews</h2>
+        <div class="review-rating" id="average-review-rating">
+            <img class="star" src="icons/empty-star.png">
+            <img class="star" src="icons/empty-star.png">
+            <img class="star" src="icons/empty-star.png">
+            <img class="star" src="icons/empty-star.png">
+            <img class="star" src="icons/empty-star.png">
+        </div>
+    </div>
+    <button id="review-creation-button">Write a review</button>
+    <form id="review-creation-wrap" class="review-wrap" hidden>
+        <div class="review-header">
+            <input id="review-name-input" name="username" class="text-input text-input-short text-input-editable" type="text" maxlength="50" autocomplete="off" spellcheck="false" placeholder="Name">
+            <div class="review-rating" id="input-review-rating">
+                <img class="star" src="icons/empty-star.png">
+                <img class="star" src="icons/empty-star.png">
+                <img class="star" src="icons/empty-star.png">
+                <img class="star" src="icons/empty-star.png">
+                <img class="star" src="icons/empty-star.png">
+            </div>
+        </div>
+        <textarea id="review-body-input" name="body" class="text-input text-input-long text-input-editable" maxlength="256" autocomplete="off" spellcheck="true" placeholder="Write review here"></textarea>
+        <div id="review-post-buttons-wrap">
+            <button class="review-post-button" id="review-cancel-post-button">Cancel</button>
+            <button class="review-post-button" id="review-confirm-post-button">Post</button>
+        </div>
+    </form>
+    <div id="reviews-scroll-wrap"></div>
+</div>

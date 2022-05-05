@@ -143,6 +143,7 @@ function displayMarkerReviews(markerData, markerObj) {
 	$("#review-creation-button").show();
 	$("#reviews-scroll-wrap").show();
 	$("#average-review-rating").show();
+
 	if (markerData.reviews.length === 0) {
 		$("#average-review-rating").hide();
 	}
@@ -151,8 +152,13 @@ function displayMarkerReviews(markerData, markerObj) {
 	$("#reviews-scroll-wrap").empty();
 
 	// look at each review
-	for (const review of markerData.reviews) {
+	for (const review of markerData.reviews.reverse()) {
 		totalRating += review.rating;
+
+		// don't give me the option to post another review if I've already posted one
+		if (parseInt(review.userID) === userId) {
+			$("#review-creation-button").hide();
+		}
 
 		// don't display if there's no description
 		if (review.description === null) {
@@ -199,13 +205,49 @@ function displayMarkerReviews(markerData, markerObj) {
 		.each(function () {
 			if (halfStars >= 2) {
 				$(this).attr("src", "icons/full-star.png");
-			} else if (halfStars > 1) {
+			} else if (halfStars >= 1) {
 				$(this).attr("src", "icons/half-star.png");
 			} else {
 				$(this).attr("src", "icons/empty-star.png");
 			}
 			halfStars -= 2;
 		});
+
+	setupReviewButtons(markerData, markerObj);
+}
+
+function setupReviewButtons(markerData, markerObj) {
+	$("#review-cancel-post-button").off("click");
+	$("#review-cancel-post-button").on("click", (e) => {
+		displayMarkerReviews(markerData, markerObj);
+	});
+
+	$("#review-confirm-post-button").off("click");
+	$("#review-confirm-post-button").on("click", (e) => {
+		let rating = 0;
+		$("#input-review-rating")
+			.children(".star")
+			.each(function () {
+				if ($(this).attr("src").includes("full")) {
+					rating++;
+				}
+			});
+
+		if (rating === 0) {
+			alert("You must specify a numeric star rating to post a review.");
+			return;
+		}
+
+		const review = {
+			username: $("#review-name-input").val(),
+			description: $("#review-body-input").val(),
+			markerID: markerObj.id,
+			userID: userId,
+			rating: rating,
+		};
+
+		postReviewToDatabase(markerData, markerObj, review);
+	});
 }
 
 function collectMarkerAttributes() {
@@ -279,7 +321,6 @@ function postMarkerToDatabase(markerData, markerObj) {
 		attributes: markerData.attributes,
 	};
 
-	console.log(pos);
 	fetch("/postMarker", {
 		method: "POST",
 		body: JSON.stringify(postData),
@@ -299,6 +340,28 @@ function postMarkerToDatabase(markerData, markerObj) {
 		})
 		.catch((e) => {
 			console.log("failed to post", e);
+		});
+}
+
+function postReviewToDatabase(markerData, markerObj, review) {
+	fetch("/postReview", {
+		method: "POST",
+		body: JSON.stringify(review),
+		headers: {
+			"Content-Type": "application/json",
+		},
+	})
+		.then((res) => {
+			if (res.status === 200) {
+				markerData.reviews.push(review);
+				displayMarkerReviews(markerData, markerObj);
+			} else {
+				console.log("failed to post review", res);
+				return;
+			}
+		})
+		.catch((e) => {
+			console.log("failed to post review", e);
 		});
 }
 
@@ -322,17 +385,18 @@ function createNewMarker(type, name) {
 		$("#marker-info-coords").text(coordString);
 	});
 
-	const markerInfo = {
+	const markerData = {
 		category: name,
 		pos: markerPos,
 		attributes: JSON.parse(JSON.stringify(attributeDictionary[type])),
+		reviews: [],
 	};
-	for (const attr of markerInfo.attributes) {
+	for (const attr of markerData.attributes) {
 		attr.value = attr.type === "Bool" ? null : "";
 	}
 
 	$("#hide-info-button").click();
-	displayMarkerInfo(markerInfo, markerObj, false);
+	displayMarkerInfo(markerData, markerObj, false);
 
 	// hide create menu
 	setTimeout(() => {
@@ -500,7 +564,9 @@ $(".filter-item").click((e) => {
 $(document).ready(() => {
 	// load or generate a user ID
 	userId = window.localStorage.getItem("minimap-user-id-int");
-	if (!userId) {
+	if (userId) {
+		userId = parseInt(userId);
+	} else {
 		$.get("/generateUser")
 			.then((res) => {
 				userId = parseInt(res.userID);

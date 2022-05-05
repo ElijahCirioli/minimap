@@ -154,9 +154,7 @@ function parseMarkerInfo(category, infoRow, reviewRows) {
 
 app.get("/markerInfo/:id", async (req, res) => {
 	console.log(`INFO: /markerInfo/${req.params.id} request`);
-	let infoResult = undefined;
-	let reviewResult = undefined;
-	let category = undefined;
+	let infoResult, reviewResult, category;
 
 	try {
 		const categoryResult = await client.query(
@@ -181,9 +179,11 @@ app.get("/markerInfo/:id", async (req, res) => {
 			return;
 		}
 
-		reviewResult = await client.query(makeQuery(
-			'SELECT "Review"."userID", "Review"."markerID", "Review".rating, "Review".description, "User".username FROM "Review" INNER JOIN "User" ON "Review"."userID" = "User"."userID" WHERE "Review"."markerID" = %L',
-			[req.params.id])
+		reviewResult = await client.query(
+			makeQuery(
+				'SELECT "Review"."userID", "Review"."markerID", "Review".rating, "Review".description, "User".username FROM "Review" INNER JOIN "User" ON "Review"."userID" = "User"."userID" WHERE "Review"."markerID" = %L',
+				[req.params.id]
+			)
 		);
 	} catch (e) {
 		console.log(e);
@@ -300,11 +300,11 @@ function buildUpdateStr(infoRepr) {
 		keyValueArr.push(infoRepr[attr]);
 	}
 
-	const fmtArr = [];
-	for (let i = 0; i < Object.keys(infoRepr).length; i++) {
-		fmtArr.push("%I = %L");
-	}
-	const fmt = fmtArr.join(", ");
+	const fmt = Object.keys(infoRepr)
+		.map(() => {
+			return "%I = %L";
+		})
+		.join(", ");
 
 	return format.withArray(fmt, keyValueArr);
 }
@@ -431,10 +431,10 @@ app.post("/postReview", async (req, res) => {
 	}
 
 	try {
-		let checkResult = await client.query(
+		const checkResult = await client.query(
 			makeQuery('SELECT * FROM public."User" WHERE "userID" = %L', [data.userID])
 		);
-		let inTable = checkResult.rows.length == 1;
+		const inTable = checkResult.rows.length == 1;
 
 		if (inTable) {
 			await client.query(makeQuery('UPDATE public."User" SET username = %L', [data.username]));
@@ -472,7 +472,7 @@ app.get("/username/:id", async (req, res) => {
 	console.log(`INFO: /getUsername/${req.params.id} request`);
 
 	try {
-		let userResult = await client.query(
+		const userResult = await client.query(
 			makeQuery('SELECT username from public."User" WHERE "userID" = %L', [req.params.id])
 		);
 
@@ -498,19 +498,17 @@ TODO: return it as int, also change postMarker to return integer markerID
 */
 
 app.get("/generateUser", async (req, res) => {
-
 	try {
 		// INSERT INTO public."Marker" (%I,type) VALUES (%L,'${markerCategory}')
 		await client.query(logQuery('INSERT INTO public."User" (username) VALUES (NULL)'));
 
 		const lastvalResult = await client.query(logQuery("SELECT lastval()"));
-		res.status(200).json({userID: lastvalResult.rows[0].lastval});
+		res.status(200).json({ userID: lastvalResult.rows[0].lastval });
 		return;
-
-	} catch (E) {
+	} catch (e) {
 		console.log(e);
 		res.status(500).send("something went wrong");
-		return;	
+		return;
 	}
 });
 
