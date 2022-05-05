@@ -25,9 +25,12 @@ function updateMarkerInDatabase(markerData, markerObj) {
 }
 
 function postMarkerToDatabase(markerData, markerObj) {
+	/* getting the position from the marker fresh seems to yield much more precise
+	   placements than using the pos attribute of markerObj. */
+	const pos = markerObj.marker.getPosition();
 	const postData = {
 		category: markerObj.category,
-		pos: markerObj.pos,
+		pos: { lat: pos.lat(), lng: pos.lng() },
 		attributes: markerData.attributes,
 	};
 
