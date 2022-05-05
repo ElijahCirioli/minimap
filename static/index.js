@@ -22,7 +22,8 @@ function displayMarkerInfo(markerData, markerObj, existsInDb) {
 	$("#marker-info-title").text(markerData.category);
 
 	// display the coordinates
-	const coordString = markerObj.pos.lat.toFixed(7) + ", " + markerObj.pos.lng.toFixed(7);
+	const pos = markerObj.marker.getPosition();
+	const coordString = pos.lat().toFixed(7) + ", " + pos.lng().toFixed(7);
 	$("#marker-info-coords").text(coordString);
 
 	// fill the attributes
@@ -321,7 +322,6 @@ function createNewMarker(type, name) {
 
 	const markerData = {
 		category: name,
-		pos: markerPos,
 		attributes: JSON.parse(JSON.stringify(attributeDictionary[type])),
 		reviews: [],
 	};

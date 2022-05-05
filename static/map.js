@@ -150,7 +150,6 @@ function addMarker(pos, type, id) {
 	// create the marker object
 	const markerObj = {
 		id: id,
-		pos: pos,
 		marker: marker,
 		category: type,
 	};
