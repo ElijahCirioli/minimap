@@ -146,8 +146,11 @@ function displayMarkerReviews(markerData, markerObj) {
 	$("#reviews-scroll-wrap").show();
 	$("#average-review-rating").show();
 
-	if (markerData.reviews.length === 0) {
+	const numReviews = markerData.reviews.length;
+	$("#review-num-users").text(`from ${numReviews} user${numReviews > 1 ? "s" : ""}`);
+	if (numReviews === 0) {
 		$("#average-review-rating").hide();
+		$("#review-num-users").text("");
 	}
 
 	let totalRating = 0;
@@ -207,7 +210,7 @@ function displayMarkerReviews(markerData, markerObj) {
 		$("#reviews-scroll-wrap").append(revElement);
 	}
 
-	let halfStars = Math.round((2 * totalRating) / markerData.reviews.length);
+	let halfStars = Math.round((2 * totalRating) / numReviews);
 	$("#average-review-rating")
 		.children(".star")
 		.each(function () {
@@ -249,9 +252,9 @@ function setupReviewButtons(markerData, markerObj) {
 			return;
 		}
 
-		const reviewText = $("#review-body-input").val();
+		const reviewText = $("#review-body-input").val().trim();
 		const review = {
-			username: $("#review-name-input").val(),
+			username: $("#review-name-input").val().trim(),
 			description: reviewText === "" ? null : reviewText,
 			markerID: markerObj.id,
 			userID: userId,
