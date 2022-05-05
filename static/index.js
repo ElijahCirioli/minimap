@@ -354,7 +354,8 @@ function popupMessage(message, icon) {
 	}
 
 	$("#popup-text").text(message);
-	$("#popup-text").prepend($(icon));
+	$("#popup-wrap").children("i").remove();
+	$("#popup-wrap").prepend($(icon));
 	$("#popup-wrap").css("top", "0");
 
 	popupTimeout = setTimeout(() => {
