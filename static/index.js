@@ -1,5 +1,6 @@
 let userId; // tracks this user's identity
 let attributeDictionary; // defines entity attributes
+let popupTimeout;
 
 function loadDictionary() {
 	$.get("/dictionary.json", (data) => {
@@ -240,7 +241,11 @@ function setupReviewButtons(markerData, markerObj) {
 			});
 
 		if (rating === 0) {
-			alert("You must specify a numeric star rating to post a review.");
+			popupMessage(
+				"You must specify a star rating in order to post a review.",
+				`<i class="fa fa-solid fa-triangle-exclamation"></i>`,
+				"var(--red)"
+			);
 			return;
 		}
 
@@ -340,6 +345,23 @@ function resizeTextInputs() {
 		const newHeight = Math.ceil(height / 21) * 21;
 		$(this).css("height", newHeight + "px");
 	});
+}
+
+function popupMessage(message, icon, iconColor) {
+	if (popupTimeout) {
+		clearTimeout(popupTimeout);
+		popupTimeout = undefined;
+	}
+
+	const coloredIcon = $(icon).css("color", iconColor);
+	$("#popup-text").text(message);
+	$("#popup-text").prepend(coloredIcon);
+	$("#popup-wrap").css("top", "0");
+
+	popupTimeout = setTimeout(() => {
+		popupTimeout = undefined;
+		$("#popup-wrap").css("top", "-120px");
+	}, 5000);
 }
 
 $("#marker-edit-button").click((e) => {
@@ -458,6 +480,14 @@ $("#input-review-rating")
 		$(this).prevAll(".star").attr("src", "icons/full-star.png");
 		$(this).attr("src", "icons/full-star.png");
 	});
+
+$("#popup-button").click((e) => {
+	if (popupTimeout) {
+		clearTimeout(popupTimeout);
+		popupTimeout = undefined;
+	}
+	$("#popup-wrap").css("top", "-120px");
+});
 
 $("#filter-title").click((e) => {
 	$("#filter-title").hide();
