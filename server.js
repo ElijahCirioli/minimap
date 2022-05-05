@@ -516,6 +516,45 @@ app.get("/generateUser", async (req, res) => {
 	}
 });
 
+/*
+REPORT A REVIEW
+
+Deletes the said review instantly
+No cross table side effects
+
+Takes: userID and markerID
+*/
+
+app.post("/reportReview", async (req, res) => {
+	try {
+		await client.query(
+			makeQuery('DELETE FROM public."Review" WHERE "userID" = %L AND "markerID" = %L', [
+				req.body.userID,
+				req.body.markerID,
+			])
+		);
+		res.status(200).send("If it existed, it doesn't anymore");
+		return;
+	} catch (e) {
+		console.log(e);
+		res.status(500).send("something went wrong");
+		return;
+	}
+});
+
+/*
+TODO: REPORT A MARKER
+
+Adds a 'Report' entity containing that the report happened
+If 2 'Report entities (separate users) stack up, the
+marker in question is deleted
+*/
+
+app.post("/reportMarker", async (req, res) => {
+	res.status(200).send("not implemented");
+	return;
+});
+
 app.listen(port, () => {
 	console.log("Server is listening on port " + port);
 });
