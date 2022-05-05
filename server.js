@@ -434,10 +434,14 @@ app.post("/postReview", async (req, res) => {
 		const checkResult = await client.query(
 			makeQuery('SELECT * FROM public."User" WHERE "userID" = %L', [data.userID])
 		);
-		const inTable = checkResult.rows.length == 1;
 
-		if (inTable) {
-			await client.query(makeQuery('UPDATE public."User" SET username = %L WHERE "userID" = %L', [data.username, data.userID]));
+		if (checkResult.rows.length == 1) {
+			await client.query(
+				makeQuery('UPDATE public."User" SET username = %L WHERE "userID" = %L', [
+					data.username,
+					data.userID,
+				])
+			);
 		} else {
 			await client.query(
 				makeQuery('INSERT INTO public."User" ("userID", username) VALUES (%L)', [
