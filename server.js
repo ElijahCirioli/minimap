@@ -437,7 +437,7 @@ app.post("/postReview", async (req, res) => {
 		let inTable = checkResult.rows.length == 1;
 
 		if (inTable) {
-			await client.query(makeQuery('UPDATE public."User" SET username = %L', [data.username]));
+			await client.query(makeQuery('UPDATE public."User" SET username = %L WHERE "userID" = %L', [data.username, data.userID]));
 		} else {
 			await client.query(
 				makeQuery('INSERT INTO public."User" ("userID", username) VALUES (%L)', [
