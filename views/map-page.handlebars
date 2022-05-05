@@ -37,6 +37,10 @@
         <p>Point of Interest</p>
     </div>
 </div>
+<div id="popup-wrap">
+    <p id="popup-text">You must specify a number of stars for a review</p>
+    <button id="popup-button">Okay</button>
+</div>
 <div id="marker-info-wrap">
     <button id="hide-info-button"><i class="fa fa-solid fa-xmark"></i></button>
     <h2 id="marker-info-title">Vending Machine</h2>
@@ -54,6 +58,7 @@
     {{> reviews }}
 </div>
 <script src="map.js" charset="utf8"></script>
+<script src="requests.js" charset="utf8"></script>
 <script src="index.js" charset="utf8"></script>
 <script
     src="https://maps.googleapis.com/maps/api/js?key={{apiKey}}&libraries=places&callback=createMap&v=weekly"
