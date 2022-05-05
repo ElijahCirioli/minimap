@@ -179,6 +179,7 @@ function displayMarkerReviews(markerData, markerObj) {
 				</div>
 			</div>
 			<p class="review-body"></p>
+			<button class="review-report-button">Report</button>
 		</div>`);
 
 		const name = review.username || "Anonymous";
@@ -195,6 +196,11 @@ function displayMarkerReviews(markerData, markerObj) {
 					$(this).attr("src", "icons/full-star.png");
 				}
 			});
+
+		// setup report functionality
+		revElement.children(".review-report-button").click((e) => {
+			reportReview(markerObj, review);
+		});
 
 		$("#reviews-scroll-wrap").append(revElement);
 	}
@@ -362,6 +368,35 @@ function postReviewToDatabase(markerData, markerObj, review) {
 		})
 		.catch((e) => {
 			console.log("failed to post review", e);
+		});
+}
+
+function reportReview(markerObj, review) {
+	const report = {
+		markerID: markerObj.id,
+		userID: review.userID,
+	};
+
+	fetch("/reportReview", {
+		method: "POST",
+		body: JSON.stringify(report),
+		headers: {
+			"Content-Type": "application/json",
+		},
+	})
+		.then((res) => {
+			if (res.status === 200) {
+				$.get(`/markerInfo/${markerObj.id}`, (data) => {
+					$("#hide-info-button").click();
+					displayMarkerInfo(data, markerObj, true);
+				});
+			} else {
+				console.log("failed to report review", res);
+				return;
+			}
+		})
+		.catch((e) => {
+			console.log("failed to report review", e);
 		});
 }
 

@@ -573,23 +573,36 @@ select:focus {
 .review-post-button:active {
     transform: scale(0.97);
 }
+.review-report-button {
+    font-family: "Nunito", sans-serif;
+    font-size: 12px;
+    background: none;
+    outline: none;
+    border: none;
+    color: var(--darker-gray);
+    text-decoration: underline;
+    cursor: pointer;
+    transition: 0.2s color;
+    float: right;
+}
+.review-report-button:hover {
+    text-decoration: none;
+    color: var(--red);
+}
 ::-webkit-scrollbar {
     width: 5px;
     height: 5px;
 }
-
 ::-webkit-scrollbar-track {
     background: #bbbbbb;
     border-radius: 5px;
 }
-
 ::-webkit-scrollbar-thumb {
     background: var(--green);
     cursor: pointer;
     transition: background 1s;
     border-radius: 5px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
     background: var(--light-green);
 }
