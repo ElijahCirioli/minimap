@@ -1,7 +1,6 @@
 let map, userMarker, locationSearch; // google maps API variables
 let positionWatchId;
-
-const markers = [];
+let markers = [];
 
 const iconPaths = {
 	BikeRack: "icons/bike-rack.png",

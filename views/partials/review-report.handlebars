@@ -1,0 +1,30 @@
+<div class="modal" id="review-report-modal" hidden>
+    <h2 class="modal-title">Report review</h2>
+    <form class="report-reasons">
+        <p class="modal-text">Select problems with review</p>
+        <div class="checkbox-wrap">
+            <div>
+                <input class="report-checkbox" type="checkbox" name="inappropriate" />
+                <label for="inappropriate">Inappropriate content</label>
+            </div>
+            <div>
+                <input class="report-checkbox" type="checkbox" name="hateful" />
+                <label for="inappropriate">Hateful content</label>
+            </div>
+            <div>
+                <input class="report-checkbox" type="checkbox" name="spam" />
+                <label for="spam">Spam</label>
+            </div>
+            <div>
+                <input class="report-checkbox" type="checkbox" name="other" />
+                <label for="other">Other</label>
+            </div>
+        </div>
+        <p class="modal-text">Explanation (optional)</p>
+        <textarea class="report-text-box" rows="5" maxlength="256" autocomplete="off"></textarea>
+        <div class="modal-buttons">
+            <button class="review-post-button modal-cancel-button">Cancel</button>
+            <button class="review-post-button modal-send-button" id="submit-review-report-button">Send</button>
+        </div>
+    </form>
+</div>

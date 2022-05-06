@@ -136,6 +136,11 @@ function setupMarkerInfoListeners(markerData, markerObj, existsInDb, originalIco
 			$("#hide-info-button").click();
 		}
 	});
+
+	$("#submit-marker-report-button").off("click");
+	$("#submit-marker-report-button").click((e) => {
+		reportMarker(markerObj);
+	});
 }
 
 function displayMarkerReviews(markerData, markerObj) {
@@ -204,7 +209,16 @@ function displayMarkerReviews(markerData, markerObj) {
 
 		// setup report functionality
 		revElement.children(".review-report-button").click((e) => {
-			reportReview(markerObj, review);
+			$("#review-report-modal").show();
+			$("#marker-report-modal").hide();
+			$("#modal-wrap").show();
+			$(".report-checkbox").prop("checked", false);
+			$(".report-text-box").val("");
+
+			$("#submit-review-report-button").off("click");
+			$("#submit-review-report-button").click((e) => {
+				reportReview(markerObj, review);
+			});
 		});
 
 		$("#reviews-scroll-wrap").append(revElement);
@@ -424,14 +438,24 @@ $("#review-creation-wrap").on("submit", (e) => {
 	e.preventDefault();
 });
 
+$(".report-reasons").on("submit", (e) => {
+	e.preventDefault();
+});
+
 $("#marker-share-button").click((e) => {
 	alert("This functionality will let you share a link directly to a marker.");
 });
 
 $("#marker-report-button").click((e) => {
-	alert(
-		"This functionality will let you report a marker as being inappropriate or inaccurate. This will lead to markers being removed from the database."
-	);
+	$("#marker-report-modal").show();
+	$("#review-report-modal").hide();
+	$("#modal-wrap").show();
+	$(".report-checkbox").prop("checked", false);
+	$(".report-text-box").val("");
+});
+
+$(".modal-cancel-button").click((e) => {
+	$("#modal-wrap").hide();
 });
 
 $("#recenter-button").click(startLocationTracking);

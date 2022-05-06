@@ -39,18 +39,48 @@ function postMarkerToDatabase(markerData, markerObj) {
 			"Content-Type": "application/json",
 		},
 	})
-		.then((res) => {
-			if (res.status !== 200) {
-				console.log("failed to post", res);
-				return;
-			}
-			res.json().then((resJSON) => {
+		.then(async (res) => {
+			if (res.status === 200) {
+				resJSON = await res.json();
 				markerObj.id = parseInt(resJSON.id);
 				displayMarkerInfo(markerData, markerObj, true);
-			});
+			} else {
+				console.log("failed to post", res);
+			}
 		})
 		.catch((e) => {
 			console.log("failed to post", e);
+		});
+}
+
+function reportMarker(markerObj) {
+	const report = {
+		markerID: markerObj.id,
+		userID: userId,
+	};
+
+	fetch("/reportMarker", {
+		method: "POST",
+		body: JSON.stringify(report),
+		headers: {
+			"Content-Type": "application/json",
+		},
+	})
+		.then((res) => {
+			if (res.status === 200) {
+				$("#modal-wrap").hide();
+				$("#hide-info-button").click();
+				markerObj.marker.setMap(null);
+				markers = markers.filter((m) => {
+					return m !== markerObj;
+				});
+			} else {
+				console.log("failed to report marker", res);
+				return;
+			}
+		})
+		.catch((e) => {
+			console.log("failed to report marker", e);
 		});
 }
 
@@ -92,6 +122,7 @@ function reportReview(markerObj, review) {
 		.then((res) => {
 			if (res.status === 200) {
 				$.get(`/markerInfo/${markerObj.id}`, (data) => {
+					$("#modal-wrap").hide();
 					$("#hide-info-button").click();
 					displayMarkerInfo(data, markerObj, true);
 				});
