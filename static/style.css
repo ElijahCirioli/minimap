@@ -322,7 +322,7 @@ footer {
 }
 .marker-attribute-string {
     margin: 0;
-    text-decoration: underline;
+    font-weight: bold;
     white-space: nowrap;
 }
 .marker-attribute-false {
