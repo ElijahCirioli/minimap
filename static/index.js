@@ -494,7 +494,9 @@ $(".modal-cancel-button").click((e) => {
 	$("#modal-wrap").hide();
 });
 
-$("#recenter-button").click(startLocationTracking);
+$("#recenter-button").click((e) => {
+	startLocationTracking(true);
+});
 
 $("#clear-location-search-button").click((e) => {
 	$("#location-search").val("");

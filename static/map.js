@@ -28,6 +28,9 @@ function createMap() {
 		clickableIcons: false,
 	});
 
+	const params = new URLSearchParams(window.location.search);
+	const id = params.get("id") ? parseInt(params.get("id")) : undefined;
+
 	// get all the markers from the server
 	$.get("/markers", (data) => {
 		for (const marker of data) {
@@ -35,8 +38,6 @@ function createMap() {
 		}
 	}).done(() => {
 		// display a marker if it's specified in the URL
-		const params = new URLSearchParams(window.location.search);
-		const id = parseInt(params.get("id"));
 		if (id === undefined) {
 			return;
 		}
@@ -62,7 +63,7 @@ function createMap() {
 	setupLocationSearch();
 
 	// try to get the current user position
-	startLocationTracking();
+	startLocationTracking(id === undefined);
 }
 
 function setupLocationSearch() {
@@ -117,7 +118,7 @@ function updateUserMarker(pos) {
 	}
 }
 
-function startLocationTracking() {
+function startLocationTracking(centerView) {
 	// make sure geolocation is supported
 	if (!navigator.geolocation) {
 		return;
@@ -129,7 +130,7 @@ function startLocationTracking() {
 		navigator.geolocation.clearWatch(positionWatchId);
 	}
 
-	let hasCentered = false;
+	let hasCentered = !centerView;
 
 	positionWatchId = navigator.geolocation.watchPosition(
 		(position) => {
