@@ -33,6 +33,25 @@ function createMap() {
 		for (const marker of data) {
 			addMarker(marker.pos, marker.category, marker.id);
 		}
+	}).done(() => {
+		// display a marker if it's specified in the URL
+		const params = new URLSearchParams(window.location.search);
+		const id = parseInt(params.get("id"));
+		if (id === undefined) {
+			return;
+		}
+		for (const markerObj of markers) {
+			if (markerObj.id === id) {
+				map.setCenter(markerObj.marker.getPosition());
+				map.setZoom(17);
+
+				$.get(`/markerInfo/${id}`, (data) => {
+					$("#hide-info-button").click();
+					displayMarkerInfo(data, markerObj, true);
+				});
+				return;
+			}
+		}
 	});
 
 	// setup location search API

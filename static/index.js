@@ -18,6 +18,12 @@ function displayMarkerInfo(markerData, markerObj, existsInDb) {
 	};
 	markerObj.marker.setIcon(scaledMarkerIcon);
 
+	if (existsInDb) {
+		updateURL(markerObj.id);
+	} else {
+		updateURL();
+	}
+
 	// update the title
 	$("#marker-info-title").text(markerData.category);
 
@@ -112,6 +118,7 @@ function setupMarkerInfoListeners(markerData, markerObj, existsInDb, originalIco
 		$("#hide-info-button").off("click");
 		$("#marker-info-wrap").css("left", "-340px");
 		$("#create-marker-button").show();
+		updateURL();
 	});
 
 	$("#marker-edit-confirm-button").off("click");
@@ -364,6 +371,14 @@ function resizeTextInputs() {
 	});
 }
 
+function updateURL(id) {
+	let newURL = window.location.href.split("?")[0];
+	if (id) {
+		newURL += "?id=" + id;
+	}
+	window.history.replaceState({}, document.title, newURL);
+}
+
 function popupMessage(message, icon) {
 	if (popupTimeout) {
 		clearTimeout(popupTimeout);
@@ -443,7 +458,27 @@ $(".report-reasons").on("submit", (e) => {
 });
 
 $("#marker-share-button").click((e) => {
-	alert("This functionality will let you share a link directly to a marker.");
+	if (navigator.clipboard) {
+		navigator.clipboard
+			.writeText(window.location.href)
+			.then(() => {
+				popupMessage(
+					"Link copied to clipboard.",
+					`<i class="fa fa-solid fa-clipboard-check" style="color: var(--green);"></i>`
+				);
+			})
+			.catch((e) => {
+				popupMessage(
+					"Failed to copy link.",
+					`<i class="fa fa-solid fa-triangle-exclamation" style="color: var(--red);"></i>`
+				);
+			});
+	} else {
+		popupMessage(
+			"Failed to copy link.",
+			`<i class="fa fa-solid fa-triangle-exclamation" style="color: var(--red);"></i>`
+		);
+	}
 });
 
 $("#marker-report-button").click((e) => {
