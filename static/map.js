@@ -29,7 +29,7 @@ function createMap() {
 	});
 
 	const params = new URLSearchParams(window.location.search);
-	const id = params.get("id") ? parseInt(params.get("id")) : undefined;
+	const id = params.get("id");
 
 	// get all the markers from the server
 	$.get("/markers", (data) => {
@@ -38,11 +38,11 @@ function createMap() {
 		}
 	}).done(() => {
 		// display a marker if it's specified in the URL
-		if (id === undefined) {
+		if (id === null) {
 			return;
 		}
 		for (const markerObj of markers) {
-			if (markerObj.id === id) {
+			if (markerObj.id === parseInt(id)) {
 				map.setCenter(markerObj.marker.getPosition());
 				map.setZoom(17);
 
@@ -63,7 +63,7 @@ function createMap() {
 	setupLocationSearch();
 
 	// try to get the current user position
-	startLocationTracking(id === undefined);
+	startLocationTracking(id === null);
 }
 
 function setupLocationSearch() {
@@ -168,6 +168,7 @@ function addMarker(pos, type, id) {
 			anchor: new google.maps.Point(16, 16),
 		},
 		animation: google.maps.Animation.DROP,
+		zIndex: 10,
 	});
 
 	// create the marker object
