@@ -502,6 +502,7 @@ TODO: return it as int, also change postMarker to return integer markerID
 */
 
 app.get("/generateUser", async (req, res) => {
+	console.log("INFO: /generateUser request");
 	try {
 		// INSERT INTO public."Marker" (%I,type) VALUES (%L,'${markerCategory}')
 		await client.query(logQuery('INSERT INTO public."User" (username) VALUES (NULL)'));
@@ -526,6 +527,7 @@ Takes: userID and markerID
 */
 
 app.post("/reportReview", async (req, res) => {
+	console.log("INFO: /reportReview request");
 	try {
 		await client.query(
 			makeQuery('DELETE FROM public."Review" WHERE "userID" = %L AND "markerID" = %L', [
@@ -543,15 +545,60 @@ app.post("/reportReview", async (req, res) => {
 });
 
 /*
-TODO: REPORT A MARKER
+REPORT A MARKER
 
 Adds a 'Report' entity containing that the report happened
 If 2 'Report entities (separate users) stack up, the
 marker in question is deleted
 */
 
+/* Should I return something explicit to front end that tells it
+   the user has already reported this marker? */
 app.post("/reportMarker", async (req, res) => {
-	res.status(200).send("not implemented");
+	console.log("INFO: /reportMarker request");
+	const markerID = req.body.markerID;
+	const userID = req.body.userID;
+
+	try {
+		/* Put in a report
+		   Timestamp is dealt with on database side */
+		await client.query(
+			makeQuery('INSERT INTO public."Report" ("userID", "markerID") VALUES (%L)', [[userID, markerID]])
+		);
+
+		const reportResult = await client.query(
+			makeQuery('SELECT * FROM public."Report" WHERE "markerID" = %L', [markerID])
+		);
+
+		/* If more than one report in the Report table is of the same marker, it should be deleted */
+		if (reportResult.rows.length > 1) {
+			/* Deletes all traces of a marker
+			Problems could arise if some succeed but later ones fail */
+			const categoryResult = await client.query(
+				makeQuery('SELECT type FROM public."Marker" WHERE "markerID" = %L', [markerID])
+			);
+
+			if (categoryResult.rows.length !== 1) {
+				logError(res1.rows.length + " rows returned, 1 expected");
+				res.status(500).send("something went wrong");
+				return;
+			}
+
+			const category = categoryResult.rows[0].type;
+			await client.query(makeQuery('DELETE FROM public."Marker" WHERE "markerID" = %L', [markerID]));
+			await client.query(
+				makeQuery('DELETE FROM public.%I WHERE "markerID" = %L', [category, markerID])
+			);
+			await client.query(makeQuery('DELETE FROM public."Review" WHERE "markerID" = %L', [markerID]));
+			await client.query(makeQuery('DELETE FROM public."Report" WHERE "markerID" = %L', [markerID]));
+		}
+	} catch (e) {
+		console.log(e);
+		res.status(500).send("something went wrong");
+		return;
+	}
+
+	res.status(200).send("Ok");
 	return;
 });
 
