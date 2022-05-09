@@ -54,6 +54,10 @@ function createMap() {
 		}
 	});
 
+	map.addListener("click", (e) => {
+		$("#hide-info-button").click();
+	});
+
 	// setup location search API
 	setupLocationSearch();
 

@@ -458,27 +458,28 @@ $(".report-reasons").on("submit", (e) => {
 });
 
 $("#marker-share-button").click((e) => {
-	if (navigator.clipboard) {
-		navigator.clipboard
-			.writeText(window.location.href)
-			.then(() => {
-				popupMessage(
-					"Link copied to clipboard.",
-					`<i class="fa fa-solid fa-clipboard-check" style="color: var(--green);"></i>`
-				);
-			})
-			.catch((e) => {
-				popupMessage(
-					"Failed to copy link.",
-					`<i class="fa fa-solid fa-triangle-exclamation" style="color: var(--red);"></i>`
-				);
-			});
-	} else {
+	if (!navigator.clipboard) {
 		popupMessage(
 			"Failed to copy link.",
 			`<i class="fa fa-solid fa-triangle-exclamation" style="color: var(--red);"></i>`
 		);
+		return;
 	}
+
+	navigator.clipboard
+		.writeText(window.location.href)
+		.then(() => {
+			popupMessage(
+				"Link copied to clipboard.",
+				`<i class="fa fa-solid fa-clipboard-check" style="color: var(--green);"></i>`
+			);
+		})
+		.catch((e) => {
+			popupMessage(
+				"Failed to copy link.",
+				`<i class="fa fa-solid fa-triangle-exclamation" style="color: var(--red);"></i>`
+			);
+		});
 });
 
 $("#marker-report-button").click((e) => {
