@@ -8,6 +8,10 @@
         left: 0;
         top: 0;
     }
+    header {
+        width: calc(100% - 30px);
+        padding: 10px 15px;
+    }
     #on-map-controls {
         width: 90%;
         right: 5%;
