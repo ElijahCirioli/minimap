@@ -26,6 +26,7 @@ function createMap() {
 		rotateControl: true,
 		fullscreenControl: false,
 		clickableIcons: false,
+		gestureHandling: "greedy",
 	});
 
 	const params = new URLSearchParams(window.location.search);
