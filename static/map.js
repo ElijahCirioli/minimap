@@ -58,6 +58,7 @@ function createMap() {
 
 	map.addListener("click", (e) => {
 		$("#hide-info-button").click();
+		$("#create-marker-button").blur();
 	});
 
 	// setup location search API
