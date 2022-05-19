@@ -270,10 +270,13 @@ footer {
     text-overflow: hidden;
     white-space: nowrap;
 }
+.sliding-hidden {
+    left: -340px !important;
+}
 #marker-info-wrap {
     position: absolute;
     top: 0;
-    left: -340px;
+    left: 0;
     z-index: 15;
     border-bottom-right-radius: 20px;
     width: 300px;

@@ -73,7 +73,7 @@ function displayMarkerInfo(markerData, markerObj, existsInDb) {
 	resizeTextInputs();
 	setupMarkerInfoListeners(markerData, markerObj, existsInDb, markerIcon);
 
-	$("#marker-info-wrap").css("left", 0);
+	$("#marker-info-wrap").removeClass("sliding-hidden");
 	$("#marker-info-buttons-wrap").show();
 	$("#marker-edit-buttons-wrap").hide();
 
@@ -116,7 +116,7 @@ function setupMarkerInfoListeners(markerData, markerObj, existsInDb, originalIco
 			markerObj.marker.setIcon(originalIcon);
 		}
 		$("#hide-info-button").off("click");
-		$("#marker-info-wrap").css("left", "-340px");
+		$("#marker-info-wrap").addClass("sliding-hidden");
 		$("#create-marker-button").show();
 		updateURL();
 	});
