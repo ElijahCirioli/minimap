@@ -132,6 +132,20 @@ footer {
     color: var(--white);
     text-decoration: none;
 }
+#about-link {
+    position: absolute;
+    right: 30px;
+    top: 10px;
+    font-family: "Nunito", sans-serif;
+    font-size: 14px;
+    color: var(--white);
+    cursor: pointer;
+    text-decoration: underline;
+    margin: 0;
+}
+#about-link:hover {
+    text-decoration: none;
+}
 #content-wrap {
     width: 100%;
     height: calc(100% - 90px);

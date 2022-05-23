@@ -49,4 +49,12 @@
         width: calc(100% - 40px);
         left: 0;
     }
+    #credit-text {
+        font-size: 12px;
+    }
+    #about-link {
+        right: 15px;
+        top: 12px;
+        font-size: 12px;
+    }
 }
