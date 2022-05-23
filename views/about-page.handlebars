@@ -1,0 +1,26 @@
+<link href="/about-style.css" rel="stylesheet" type="text/css" media="all">
+<div id="about-wrap">
+    <h1 class="about-title">About minimap</h1>
+    <p class="about-text">
+        This website was developed by Charlie Hayden and <a href="https://elijahcirioli.com" target="__blank">Elijah Cirioli</a> as part of their CS 340 Databases class at Oregon State University. It was designed to be a useful, community-driven tool for finding amenities around the OSU campus that may be hard to find on traditional car-oriented navigation services. It's usefullness is not limited to the OSU campus however, as people anywhere in the world are able to post data about their locations and review the posts of others around them.
+    </p>
+    <p class="about-text">
+        It incorporates a PostgreSQL database connected to a Node.js backend to handle the storing and retrieval of the different markers. The Google Maps API is used for the actual maps while front-end javascript code handles creating the markers and populating the user interface elements. The source code can be viewed <a href="https://github.com/ElijahCirioli/minimap" target="__blank">on GitHub</a>.
+    </p>
+    <h1 class="about-title">How to use</h1>
+    <p class="about-text">
+        This service is entirely community-driven which means that anyone is able to add or modify the database that everyone uses. Users can create new markers, modify the attributes of existing ones, leave reviews, or report inappropriate or inaccurate content to be removed. To view markers near you, either allow the website to track your location or type in your current location in the search box. The six different types of markers will be seen on the map marking the location of what they represent. There are five different markers that represent specific things and a sixth that can be used to represent things that don't fall into the five categories. The filter tool can be used to only show specific types of markers on the map.
+    </p>
+    <p class="about-text">
+        Clicking on a marker will reveal more details about it as well as reviews from other users. Each type of marker has specific attributes associated with it. These may be whether something exists like whether a bathroom has a baby-changing station, or something less binary like the collection time of a postal drop box. When creating a marker you will have the option to set these attributes, leaving them as "unknown" if you aren't sure about the required information. Other people can edit these attributes if they have more information or if something changes by clicking "edit" in the marker info window.
+    </p>
+    <p class="about-text">
+        Editing can usually fix small innaccuracies, but if the existence of the marker itself is incorrect, whether it be vandalism or simply the object it's referencing being removed, then the marker should be deleted. This can be done through reporting a marker by clicking "report" in the marker info window. This will let you enter some information explaining your report before submitting it. After enough valid reports have been filed a marker will be removed automatically.
+    </p>
+    <p class="about-text">
+        Creating a marker is not much different from editing one. The purple plus sign button allows you to choose which type of marker to create, and you can then move it around on the map and edit it's attributes. Clicking "confirm" will add the marker to the public database, making it visible to others. It's good to check whether a marker already exists for something before making a new one yourself.
+    </p>
+    <p class="about-text">
+        Anyone can leave a maximum of one review for every marker. These must include a star rating out of five and can optionally include text describing your experience with the amenity or helpful information for others seeking to use it. The average star rating and all of the textual reviews are visible alongside the marker properties in the information window. Just as with markers, inappropriate or inaccurate content in reviews can be reported which will lead to a review being removed.
+    </p>
+</div>

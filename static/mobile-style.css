@@ -49,4 +49,9 @@
         width: calc(100% - 40px);
         left: 0;
     }
+    #about-wrap {
+        margin: 40px auto;
+        padding-bottom: 60px;
+        width: 90%;
+    }
 }

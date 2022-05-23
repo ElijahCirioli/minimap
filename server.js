@@ -602,6 +602,14 @@ app.post("/reportMarker", async (req, res) => {
 	return;
 });
 
+app.get("/about", (req, res) => {
+	res.status(200).render("about-page");
+});
+
+app.get("*", (req, res) => {
+	res.status(404).render("404-page");
+});
+
 app.listen(port, () => {
 	console.log("Server is listening on port " + port);
 });

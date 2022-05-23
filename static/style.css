@@ -31,7 +31,9 @@ header {
     justify-content: space-between;
     align-items: center;
     z-index: 20;
-    position: relative;
+    position: sticky;
+    top: 0;
+    left: 0;
 }
 #logo {
     display: flex;
@@ -41,6 +43,7 @@ header {
     align-items: center;
     cursor: pointer;
     height: 30px;
+    text-decoration: none;
 }
 #logo-icon {
     height: 34px;
@@ -732,4 +735,33 @@ input[type=checkbox] {
     justify-content: flex-end;
     margin-top: 5px;
     gap: 10px;
+}
+#error-wrap {
+    width: 80%;
+    margin: 80px auto;
+    text-align: center;
+}
+#error-title-text {
+    font-family: "Fredoka One", cursive;
+    color: var(--green);
+    font-weight: bold;
+    font-size: 50px;
+    margin: 0;
+}
+#error-body-text {
+    margin: 10px;
+    font-family: "Nunito", sans-serif;
+    color: var(--black);
+    font-size: 18px;
+}
+#emoji-wrap {
+    height: 60px;
+    font-size: 60px;
+    color: var(--purple);
+    margin: 20px auto;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: 20px;
 }
