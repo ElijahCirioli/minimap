@@ -88,6 +88,12 @@ app.set("views", "./views");
 app.use(express.json());
 app.use(express.static("./static"));
 
+// setup HTTP CORS
+app.use((req, res, next) => {
+	res.header("Access-Control-Allow-Origin", "*");
+	next();
+});
+
 app.get("/", (req, res) => {
 	res.status(200).render("map-page", { apiKey: credentials.mapsKey });
 });
