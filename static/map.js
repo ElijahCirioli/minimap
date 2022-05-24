@@ -1,7 +1,8 @@
 let map, userMarker, locationSearch; // google maps API variables
-let positionWatchId;
-let markers = [];
+let positionWatchId; // track the geolocation API events
+let markers = []; // the list of all marker objects
 
+// paths to the marker icon images
 const iconPaths = {
 	BikeRack: "icons/bike-rack.png",
 	Restroom: "icons/restroom.png",
@@ -29,6 +30,7 @@ function createMap() {
 		gestureHandling: "greedy",
 	});
 
+	// look for marker id in URL
 	const params = new URLSearchParams(window.location.search);
 	const id = params.get("id");
 
@@ -56,6 +58,7 @@ function createMap() {
 		}
 	});
 
+	// set UI elements to disappear when map is clicked
 	map.addListener("click", (e) => {
 		$("#hide-info-button").click();
 		$("#create-marker-button").blur();
@@ -134,7 +137,7 @@ function startLocationTracking(centerView) {
 	}
 
 	let hasCentered = !centerView;
-
+	// start watching the user's position
 	positionWatchId = navigator.geolocation.watchPosition(
 		(position) => {
 			const pos = {

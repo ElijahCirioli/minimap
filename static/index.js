@@ -1,8 +1,9 @@
 let userId; // tracks this user's identity
 let attributeDictionary; // defines entity attributes
-let popupTimeout;
+let popupTimeout; // track the counter to when a popup disappears
 
 function loadDictionary() {
+	// load the data dictionary from the server
 	$.get("/dictionary.json", (data) => {
 		attributeDictionary = data;
 	});
@@ -18,6 +19,7 @@ function displayMarkerInfo(markerData, markerObj, existsInDb) {
 	};
 	markerObj.marker.setIcon(scaledMarkerIcon);
 
+	// update the url with the marker id
 	if (existsInDb) {
 		updateURL(markerObj.id);
 	} else {
@@ -48,6 +50,7 @@ function displayMarkerInfo(markerData, markerObj, existsInDb) {
 			}
 		}
 
+		// create the input elements
 		let input = `<select name="${attr.name}+${attr.columnName}" hidden>
 						<option value="unknown" ${attr.value === null ? "selected" : ""}>Unknown</option>
 						<option value="yes" ${attr.value ? "selected" : ""}>Yes</option>
@@ -73,10 +76,12 @@ function displayMarkerInfo(markerData, markerObj, existsInDb) {
 	resizeTextInputs();
 	setupMarkerInfoListeners(markerData, markerObj, existsInDb, markerIcon);
 
+	// make it visible
 	$("#marker-info-wrap").removeClass("sliding-hidden");
 	$("#marker-info-buttons-wrap").show();
 	$("#marker-edit-buttons-wrap").hide();
 
+	// show review elements
 	if (existsInDb) {
 		displayMarkerReviews(markerData, markerObj);
 	} else {
@@ -87,8 +92,10 @@ function displayMarkerInfo(markerData, markerObj, existsInDb) {
 }
 
 function setupMarkerInfoListeners(markerData, markerObj, existsInDb, originalIcon) {
+	// updating marker attributes
 	$("select").on("change", (e) => {
 		const val = e.target.value;
+		// update the UI
 		let newAttrClass = "marker-attribute-false";
 		let newAttrIcon = "<i class='fa fa-solid fa-circle-question'></i>";
 		if (val === "yes") {
@@ -98,6 +105,7 @@ function setupMarkerInfoListeners(markerData, markerObj, existsInDb, originalIco
 			newAttrIcon = "<i class='fa fa-solid fa-circle-xmark'></i>";
 		}
 
+		// add or remove icons
 		const row = $(e.target).parent();
 		row.children("i").remove();
 		row.prepend(newAttrIcon);
@@ -110,6 +118,7 @@ function setupMarkerInfoListeners(markerData, markerObj, existsInDb, originalIco
 
 	$("#hide-info-button").off("click");
 	$("#hide-info-button").click((e) => {
+		// hide the marker info window
 		if (!existsInDb) {
 			markerObj.marker.setMap(null);
 		} else {
@@ -125,8 +134,10 @@ function setupMarkerInfoListeners(markerData, markerObj, existsInDb, originalIco
 	$("#marker-edit-confirm-button").click((e) => {
 		markerObj.marker.setIcon(originalIcon);
 		markerObj.marker.setDraggable(false);
+		// gather the attributes from the form
 		markerData.attributes = collectMarkerAttributes();
 
+		// update or add the marker to the database
 		if (existsInDb) {
 			updateMarkerInDatabase(markerData, markerObj);
 		} else {
@@ -140,6 +151,7 @@ function setupMarkerInfoListeners(markerData, markerObj, existsInDb, originalIco
 			markerObj.marker.setIcon(originalIcon);
 			displayMarkerInfo(markerData, markerObj, true);
 		} else {
+			// marker isn't in database so remove it
 			$("#hide-info-button").click();
 		}
 	});
@@ -231,6 +243,7 @@ function displayMarkerReviews(markerData, markerObj) {
 		$("#reviews-scroll-wrap").append(revElement);
 	}
 
+	// calculate and display average rating using half stars
 	let halfStars = Math.round((2 * totalRating) / numReviews);
 	$("#average-review-rating")
 		.children(".star")
@@ -256,6 +269,7 @@ function setupReviewButtons(markerData, markerObj) {
 
 	$("#review-confirm-post-button").off("click");
 	$("#review-confirm-post-button").on("click", (e) => {
+		// determine the rating
 		let rating = 0;
 		$("#input-review-rating")
 			.children(".star")
@@ -265,6 +279,7 @@ function setupReviewButtons(markerData, markerObj) {
 				}
 			});
 
+		// make sure they specified a rating
 		if (rating === 0) {
 			popupMessage(
 				"You must specify a star rating in order to post a review.",
@@ -273,6 +288,7 @@ function setupReviewButtons(markerData, markerObj) {
 			return;
 		}
 
+		// create the review object
 		const reviewText = $("#review-body-input").val().trim();
 		const review = {
 			username: $("#review-name-input").val().trim(),
@@ -288,6 +304,7 @@ function setupReviewButtons(markerData, markerObj) {
 
 function collectMarkerAttributes() {
 	const attributes = [];
+	// look at each attribute
 	$("#marker-info-attributes-wrap")
 		.children()
 		.each(function () {
@@ -295,6 +312,7 @@ function collectMarkerAttributes() {
 			const input = $(this).children("input");
 			const textarea = $(this).children("textarea");
 
+			// find the value and type
 			if (select.length > 0) {
 				const attrName = select.attr("name").split("+")[0];
 				const colName = select.attr("name").split("+")[1];
@@ -337,8 +355,10 @@ function createNewMarker(type, name) {
 		markerPos = bounds.getCenter().toJSON();
 	}
 
+	// add the marker to the map
 	markerObj = addMarker(markerPos, type, -1);
 	markerObj.marker.setDraggable(true);
+	// update the coordinates on screen when marker is dragged
 	google.maps.event.addListener(markerObj.marker, "dragend", (e) => {
 		const coordString = e.latLng.lat().toFixed(7) + ", " + e.latLng.lng().toFixed(7);
 		$("#marker-info-coords").text(coordString);
@@ -363,6 +383,7 @@ function createNewMarker(type, name) {
 }
 
 function resizeTextInputs() {
+	// grow large text inputs to fit content
 	$(".text-input-long").css("height", "auto");
 	$(".text-input-long").each(function () {
 		const height = $(this)[0].scrollHeight;
@@ -372,6 +393,7 @@ function resizeTextInputs() {
 }
 
 function updateURL(id) {
+	// add a marker id to the URL
 	let newURL = window.location.href.split("?")[0];
 	if (id) {
 		newURL += "?id=" + id;
@@ -594,6 +616,7 @@ $(document).ready(() => {
 		$.get("/generateUser")
 			.then((res) => {
 				userId = parseInt(res.userID);
+				// save it to local storage for later
 				window.localStorage.setItem("minimap-user-id-int", userId);
 			})
 			.catch((e) => {
