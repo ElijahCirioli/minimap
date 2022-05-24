@@ -17,12 +17,14 @@
         right: 5%;
         gap: 20px;
         top: 10px;
+        font-size: 18px;
     }
     #location-search-form {
         flex-grow: 1;
     }
     #location-search {
-        width: calc(100% - 35px);
+        width: calc(100% - 40px);
+        padding: 0 25px 0 15px;
     }
     .sliding-hidden {
         left: 0 !important;
