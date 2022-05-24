@@ -86,10 +86,10 @@ app.engine("handlebars", engine({ defaultLayout: "main" }));
 app.set("view engine", "handlebars");
 app.set("views", "./views");
 
-app.use(express.json());
-app.use(express.static("./static"));
 app.use(cors());
 app.options("*", cors());
+app.use(express.json());
+app.use(express.static("./static"));
 
 app.get("/", (req, res) => {
 	res.status(200).render("map-page", { apiKey: credentials.mapsKey });
