@@ -5,6 +5,7 @@ import pkg from "pg";
 import format from "pg-format";
 const { Client } = pkg;
 import { execSync } from "child_process";
+import cors from "cors";
 
 const dataDictionary = JSON.parse(fs.readFileSync("static/dictionary.json"));
 
@@ -85,18 +86,10 @@ app.engine("handlebars", engine({ defaultLayout: "main" }));
 app.set("view engine", "handlebars");
 app.set("views", "./views");
 
-// setup HTTP CORS
-app.use((req, res, next) => {
-	res.header("Access-Control-Allow-Origin", "*");
-	res.header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
-	res.header(
-		"Access-Control-Allow-Headers",
-		"Origin,X-Requested-With,Content-Type,Accept,content-type,application/json"
-	);
-	next();
-});
 app.use(express.json());
 app.use(express.static("./static"));
+app.use(cors());
+app.options("*", cors());
 
 app.get("/", (req, res) => {
 	res.status(200).render("map-page", { apiKey: credentials.mapsKey });
