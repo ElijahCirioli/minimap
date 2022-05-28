@@ -57,10 +57,18 @@ function displayMarkerInfo(markerData, markerObj, existsInDb) {
 						<option value="no" ${attr.value === false ? "selected" : ""}>No</option>
 					</select>`;
 		if (attr.type === "ShortString") {
-			input = `<input name="${attr.name}+${attr.columnName}" class="text-input text-input-short" type="text" maxlength="50" autocomplete="off" spellcheck="false" value="${attr.value}">`;
+			input = `<input name="${attr.name}+${
+				attr.columnName
+			}" class="text-input text-input-short" type="text" maxlength="50" autocomplete="off" spellcheck="false" value="${
+				attr.value === null ? "" : attr.value
+			}">`;
 			attrClass = "marker-attribute-string";
 		} else if (attr.type === "LongString") {
-			input = `<textarea name="${attr.name}+${attr.columnName}" class="text-input text-input-long" maxlength="256" autocomplete="off" spellcheck="false">${attr.value}</textarea>`;
+			input = `<textarea name="${attr.name}+${
+				attr.columnName
+			}" class="text-input text-input-long" maxlength="256" autocomplete="off" spellcheck="false">${
+				attr.value === null ? "" : attr.value
+			}</textarea>`;
 			attrClass = "marker-attribute-string";
 		}
 
