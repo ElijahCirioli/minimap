@@ -76,7 +76,11 @@ function reportMarker(markerObj) {
 				});
 			} else {
 				console.log("failed to report marker", res);
-				return;
+				$("#modal-wrap").hide();
+				popupMessage(
+					"You've already reported this marker.",
+					`<i class="fa fa-solid fa-triangle-exclamation" style="color: var(--red);"></i>`
+				);
 			}
 		})
 		.catch((e) => {

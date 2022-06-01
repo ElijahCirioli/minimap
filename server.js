@@ -165,7 +165,7 @@ app.get("/markerInfo/:id", async (req, res) => {
 		);
 
 		if (categoryResult.rows.length !== 1) {
-			logError(res1.rows.length + " rows returned, 1 expected");
+			logError(categoryResult.rows.length + " rows returned, 1 expected");
 			res.status(500).send("something went wrong");
 			return;
 		}
@@ -563,6 +563,14 @@ app.post("/reportMarker", async (req, res) => {
 	const userID = req.body.userID;
 
 	try {
+		const checkResult = await client.query(
+			makeQuery('SELECT * FROM public."User" WHERE "userID" = %L', [userID])
+		);
+
+		if (checkResult.rows.length == 0) {
+			await client.query(makeQuery('INSERT INTO public."User" ("userID") VALUES (%L)', [[userID]]));
+		}
+
 		/* Put in a report
 		   Timestamp is dealt with on database side */
 		await client.query(
@@ -577,23 +585,7 @@ app.post("/reportMarker", async (req, res) => {
 		if (reportResult.rows.length > 1) {
 			/* Deletes all traces of a marker
 			Problems could arise if some succeed but later ones fail */
-			const categoryResult = await client.query(
-				makeQuery('SELECT type FROM public."Marker" WHERE "markerID" = %L', [markerID])
-			);
-
-			if (categoryResult.rows.length !== 1) {
-				logError(res1.rows.length + " rows returned, 1 expected");
-				res.status(500).send("something went wrong");
-				return;
-			}
-
-			const category = categoryResult.rows[0].type;
 			await client.query(makeQuery('DELETE FROM public."Marker" WHERE "markerID" = %L', [markerID]));
-			await client.query(
-				makeQuery('DELETE FROM public.%I WHERE "markerID" = %L', [category, markerID])
-			);
-			await client.query(makeQuery('DELETE FROM public."Review" WHERE "markerID" = %L', [markerID]));
-			await client.query(makeQuery('DELETE FROM public."Report" WHERE "markerID" = %L', [markerID]));
 		}
 	} catch (e) {
 		console.log(e);
