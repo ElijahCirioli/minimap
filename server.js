@@ -228,8 +228,6 @@ function buildMarkerRepr(data) {
 	return markerRepr;
 }
 
-//TODO FIXME - if it fails to insert into info table, but is in Marker table, that's bad
-// In that case the placed Marker should be deleted
 app.post("/postMarker", async (req, res) => {
 	console.log("INFO: /postMarker request");
 	const markerRepr = buildMarkerRepr(req.body);
@@ -604,8 +602,6 @@ app.post("/reportMarker", async (req, res) => {
 
 		/* If more than one report in the Report table is of the same marker, it should be deleted */
 		if (reportResult.rows.length > 1) {
-			/* Deletes all traces of a marker
-			Problems could arise if some succeed but later ones fail */
 			await client.query(makeQuery('DELETE FROM public."Marker" WHERE "markerID" = %L', [markerID]));
 		}
 	} catch (e) {
