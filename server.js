@@ -165,7 +165,7 @@ app.get("/markerInfo/:id", async (req, res) => {
 		);
 
 		if (categoryResult.rows.length !== 1) {
-			logError(res1.rows.length + " rows returned, 1 expected");
+			logError(categoryResult.rows.length + " rows returned, 1 expected");
 			res.status(500).send("something went wrong");
 			return;
 		}
@@ -228,8 +228,6 @@ function buildMarkerRepr(data) {
 	return markerRepr;
 }
 
-//TODO FIXME - if it fails to insert into info table, but is in Marker table, that's bad
-// In that case the placed Marker should be deleted
 app.post("/postMarker", async (req, res) => {
 	console.log("INFO: /postMarker request");
 	const markerRepr = buildMarkerRepr(req.body);
@@ -241,6 +239,15 @@ app.post("/postMarker", async (req, res) => {
 		return;
 	}
 
+	// start a transaction
+	try {
+		await client.query("BEGIN");
+	} catch (e) {
+		console.log(e);
+		res.status(500).send("something went wrong");
+		return;
+	}
+
 	try {
 		await client.query(
 			makeQuery(`INSERT INTO public."Marker" (%I,type) VALUES (%L,'${markerCategory}')`, [
@@ -249,6 +256,7 @@ app.post("/postMarker", async (req, res) => {
 			])
 		);
 	} catch (e) {
+		client.query("ROLLBACK");
 		console.log(e);
 		res.status(500).send("something went wrong");
 		return;
@@ -258,6 +266,7 @@ app.post("/postMarker", async (req, res) => {
 		const lastvalResult = await client.query(logQuery("SELECT lastval()"));
 		infoRepr.markerID = lastvalResult.rows[0].lastval;
 	} catch (e) {
+		client.query("ROLLBACK");
 		console.log(e);
 		res.status(500).send("something went wrong");
 		return;
@@ -271,6 +280,16 @@ app.post("/postMarker", async (req, res) => {
 				Object.values(infoRepr),
 			])
 		);
+	} catch (e) {
+		client.query("ROLLBACK");
+		console.log(e);
+		res.status(500).send("something went wrong");
+		return;
+	}
+
+	// commit the transaction
+	try {
+		await client.query("COMMIT");
 	} catch (e) {
 		console.log(e);
 		res.status(500).send("something went wrong");
@@ -563,6 +582,14 @@ app.post("/reportMarker", async (req, res) => {
 	const userID = req.body.userID;
 
 	try {
+		const checkResult = await client.query(
+			makeQuery('SELECT * FROM public."User" WHERE "userID" = %L', [userID])
+		);
+
+		if (checkResult.rows.length == 0) {
+			await client.query(makeQuery('INSERT INTO public."User" ("userID") VALUES (%L)', [[userID]]));
+		}
+
 		/* Put in a report
 		   Timestamp is dealt with on database side */
 		await client.query(
@@ -575,25 +602,7 @@ app.post("/reportMarker", async (req, res) => {
 
 		/* If more than one report in the Report table is of the same marker, it should be deleted */
 		if (reportResult.rows.length > 1) {
-			/* Deletes all traces of a marker
-			Problems could arise if some succeed but later ones fail */
-			const categoryResult = await client.query(
-				makeQuery('SELECT type FROM public."Marker" WHERE "markerID" = %L', [markerID])
-			);
-
-			if (categoryResult.rows.length !== 1) {
-				logError(res1.rows.length + " rows returned, 1 expected");
-				res.status(500).send("something went wrong");
-				return;
-			}
-
-			const category = categoryResult.rows[0].type;
 			await client.query(makeQuery('DELETE FROM public."Marker" WHERE "markerID" = %L', [markerID]));
-			await client.query(
-				makeQuery('DELETE FROM public.%I WHERE "markerID" = %L', [category, markerID])
-			);
-			await client.query(makeQuery('DELETE FROM public."Review" WHERE "markerID" = %L', [markerID]));
-			await client.query(makeQuery('DELETE FROM public."Report" WHERE "markerID" = %L', [markerID]));
 		}
 	} catch (e) {
 		console.log(e);
