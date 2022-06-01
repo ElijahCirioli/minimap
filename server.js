@@ -241,6 +241,15 @@ app.post("/postMarker", async (req, res) => {
 		return;
 	}
 
+	// start a transaction
+	try {
+		await client.query("BEGIN");
+	} catch (e) {
+		console.log(e);
+		res.status(500).send("something went wrong");
+		return;
+	}
+
 	try {
 		await client.query(
 			makeQuery(`INSERT INTO public."Marker" (%I,type) VALUES (%L,'${markerCategory}')`, [
@@ -249,6 +258,7 @@ app.post("/postMarker", async (req, res) => {
 			])
 		);
 	} catch (e) {
+		client.query("ROLLBACK");
 		console.log(e);
 		res.status(500).send("something went wrong");
 		return;
@@ -258,6 +268,7 @@ app.post("/postMarker", async (req, res) => {
 		const lastvalResult = await client.query(logQuery("SELECT lastval()"));
 		infoRepr.markerID = lastvalResult.rows[0].lastval;
 	} catch (e) {
+		client.query("ROLLBACK");
 		console.log(e);
 		res.status(500).send("something went wrong");
 		return;
@@ -271,6 +282,16 @@ app.post("/postMarker", async (req, res) => {
 				Object.values(infoRepr),
 			])
 		);
+	} catch (e) {
+		client.query("ROLLBACK");
+		console.log(e);
+		res.status(500).send("something went wrong");
+		return;
+	}
+
+	// commit the transaction
+	try {
+		await client.query("COMMIT");
 	} catch (e) {
 		console.log(e);
 		res.status(500).send("something went wrong");
